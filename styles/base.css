@@ -1,0 +1,75 @@
+/* -------------------------------------------------------------
+      CSS3, Please! The Cross-Browser CSS3 Rule Generator
+      ===================================================
+
+      You can edit the underlined values in this css file,
+      but don't worry about making sure the corresponding
+      values match, that's all done automagically for you.
+
+      Whenever you want, you can copy the whole or part of
+      this page and paste it into your own stylesheet.
+------------------------------------------------------------- */
+
+ /*                           {toggle rule off} */
+.box_round {
+     -moz-border-radius: 12px; /* FF1+ */
+  -webkit-border-radius: 12px; /* Saf3+, Chrome */
+          border-radius: 12px; /* Opera 10.5, IE 9 */
+}
+  
+/*                           {toggle rule off} */
+.box_shadow {
+     -moz-box-shadow: 0px 0px 4px #ffffff; /* FF3.5+ */
+  -webkit-box-shadow: 0px 0px 4px #ffffff; /* Saf3.0+, Chrome */
+          box-shadow: 0px 0px 4px #ffffff; /* Opera 10.5, IE 9.0 */
+              filter:  progid:DXImageTransform.Microsoft.dropshadow(OffX=0px, OffY=0px, Color='#ffffff'); /* IE6,IE7 */
+          -ms-filter: "progid:DXImageTransform.Microsoft.dropshadow(OffX=0px, OffY=0px, Color='#ffffff')"; /* IE8 */
+}
+  
+/*                           {toggle rule off} */
+.box_gradient {
+  background-image: -moz-linear-gradient(top, #444444, #999999); /* FF3.6 */
+  background-image: -webkit-gradient(linear,left bottom,left top,color-stop(0, #444444),color-stop(1, #999999)); /* Saf4+, Chrome */
+            filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#444444', endColorstr='#999999'); /* IE6,IE7 */
+        -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#444444', endColorstr='#999999')"; /* IE8 */
+}
+  
+/*                           {toggle rule off} */
+.box_rgba {
+  background-color: #B4B490;
+  background-color: rgba(180, 180, 144, 0.6);  /* FF3+, Saf3+, Opera 10.10+, Chrome */
+            filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#99B4B490',endColorstr='#99B4B490'); /* IE6,IE7 */
+        -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#99B4B490',endColorstr='#99B4B490')"; /* IE8 */
+}
+  
+/*                           {toggle rule on} 
+.box_rotate {
+     -moz-transform: rotate(7.5deg);  /* FF3.5+ 
+       -o-transform: rotate(7.5deg);  /* Opera 10.5 
+  -webkit-transform: rotate(7.5deg);  /* Saf3.1+, Chrome 
+             filter:  progid:DXImageTransform.Microsoft.BasicImage(rotation=0.083);  /* IE6,IE7 
+         -ms-filter: "progid:DXImageTransform.Microsoft.BasicImage(rotation=0.083)"; /* IE8 
+}
+  
+/* */
+ @font-face {
+  font-family: 'WebFont';
+  src: url('myfont.eot');  /* IE6+ */
+  src: local('☺'), 
+        url('myfont.woff') format('woff'),  /* FF3.6 */
+        url('myfont.ttf') format('truetype');  /* Saf3+,Chrome,Opera10+ */
+}
+  
+
+
+
+/* 
+    btw- up/down keys work, along with your mouse wheel. ;)
+    coming soon.. extra css transforms (skew, scale), css transitions, and more.
+    plz leave feedback here.
+    
+	
+    © 2010; a Paul Irish and Jonathan Neal joint, in association w/ Boaz Sender
+	
+	        if you like this, you'll probably also dig yayQuery. <3
+*/

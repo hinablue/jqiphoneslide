@@ -1,0 +1,687 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW"> 
+<head profile="http://gmpg.org/xfn/11"> 
+<meta http-equiv="content-Type" content="text/html; charset=utf-8" /> 
+<meta http-equiv="imagetoolbar" content="no" /> 
+<meta name="robots" content="noodp" /> 
+<title>jQuery Simple iPhone Slide v0.32</title> 
+<link rel="stylesheet" media="screen" type="text/css" href="./styles/base.css" />
+<link rel="stylesheet" media="screen" type="text/css" href="./styles/main.css" />
+
+<link type="text/css" rel="stylesheet" href="./syntaxhighlighter/styles/shCore.css"/>
+<link type="text/css" rel="stylesheet" href="./syntaxhighlighter/styles/shThemeFadeToGrey.css"/>
+
+<script type="text/javascript" src="./syntaxhighlighter/scripts/shCore.js"></script>
+<script type="text/javascript" src="./syntaxhighlighter/scripts/shBrushCss.js"></script>
+<script type="text/javascript" src="./syntaxhighlighter/scripts/shBrushJScript.js"></script>
+<script type="text/javascript" src="./syntaxhighlighter/scripts/shBrushPlain.js"></script>
+<script type="text/javascript" src="./syntaxhighlighter/scripts/shBrushXml.js"></script>
+<script type="text/javascript" src="./scripts/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="./scripts/jquery.easing.1.3.min.js"></script>
+<script type="text/javascript" src="./scripts/jquery.iphone.slide.min.js"></script>
+</head>
+
+<script type="text/javascript">
+//<![CDDA[
+$(document).ready(function() {
+	SyntaxHighlighter.config.clipboardSwf = './syntaxhighlighter/scripts/clipboard.swf';
+	SyntaxHighlighter.all();
+
+	$('#album, #album4, #album5').iphoneSlide({
+		handler: ".paging",
+		pageHandler: ".page"
+	});
+	
+	$('#album2').iphoneSlide({
+		handler: ".paging",
+		pageHandler: ".page",
+		direction: "matrix"
+	});
+	
+	$('#album3').iphoneSlide({
+		handler: ".paging",
+		pageHandler: ".page",
+		direction: "vertical"
+	});
+	
+	$('#album6').iphoneSlide({
+		maxShiftPage : 4,
+		handler: ".paging",
+		pageHandler: ".page",
+		onShiftComplete: function(elem, page) {
+			var centerPage = 4, handler = $(elem).parent(), ahead, behind;
+			
+			if(page!=centerPage) {
+				for(var i=1; i<=Math.abs(centerPage-page); i++) {
+					ahead = handler.children(':first');
+					behind = handler.children(':last');
+					
+					if(centerPage-page>0) {
+						ahead.before(behind);
+					} else if(centerPage-page<0) {
+						behind.after(ahead);
+					}
+				}
+				handler.css( 'left' , $(this).width()*(1-centerPage));
+				$(this).data('nowPage', centerPage);
+			}
+		}
+	}, function() {
+		var page = $(this).data('nowPage'), centerPage = 4, totalPages = $(this).data('totalPages'), handler = $(".paging", $(this)), ahead, behind;
+		if(page != centerPage) {
+			ahead = handler.children(':first');
+			behind = handler.children().eq(totalPages-Math.abs(centerPage-page)-1).nextAll();
+			ahead.before(behind);
+			
+			handler.css( 'left' , $(this).width()*(1-centerPage));
+			$(this).data('nowPage', centerPage);
+		}
+	});
+	
+	$('#album7').iphoneSlide({
+		handler: ".paging",
+		pageHandler: ".page",
+		direction: "matrix",
+		easing: "easeOutBounce"
+	});
+	
+	$('#slidetopage4').click(function() {
+		if($('#album4').data("initIphoneSlide")) {
+			var element = $('#album4');
+			var handler = ".paging";
+			var nowPage = parseInt(element.data('nowPage'), 10), 
+				totalPages = parseInt(element.data('totalPages'), 10), 
+				matrixSqrt = parseInt(element.data('matrixSqrt'), 10);
+			
+			// The number of page which I want to go to.
+			var page = 4;
+			// The direction you setup in the plugin's options.
+			var direction = "horizontal"; 
+			
+			if(page>totalPages) {
+				alert('Page cannot over '+totalPages+' page(s).');
+			} else {
+				if(Math.abs(nowPage-page) > 0) {
+					var moveTargetX, moveTargetY, __beshift = Math.abs(nowPage-page);
+					
+					switch(direction) {
+						case "matrix":
+							var nowPageX = (nowPage % matrixSqrt==0) ? matrixSqrt : (nowPage % matrixSqrt);
+							var nowPageY = Math.ceil(nowPage / matrixSqrt);
+							
+							var pageX = (page % matrixSqrt==0) ? matrixSqrt : (page % matrixSqrt);
+							var pageY = Math.ceil(page / matrixSqrt);
+							
+							if(nowPageX-pageX>0) {
+								moveTargetX = "+=";
+							} else if(nowPageX-pageX<0) {
+								moveTargetX = "-=";
+							}
+							moveTargetX += Math.abs(nowPageX-pageX)*element.width()+"px";
+							
+							if(nowPageY-pageY>0) {
+								moveTargetY = "+=";
+							} else if(nowPageY-pageY<0) {
+								moveTargetY = "-=";
+							}
+							moveTargetY += Math.abs(nowPageY-pageY)*element.height()+"px";
+							
+							$(handler, element).animate({ 'top': moveTargetY, 'left': moveTargetX }, function() {
+								// You can call function here.
+							});
+						break;
+						
+						case "vertical":
+							moveTargetY = (nowPage-page > 0) ? "+="+__beshift*element.height()+"px" : "-="+__beshift*element.height()+"px";
+							$(handler, element).animate({ 'top': moveTargetY, 'left' : 0 }, function() {
+								// You can call function here.
+							});
+						break;
+						
+						case "horizontal":
+							moveTargetX = (nowPage-page > 0) ? "+="+__beshift*element.width()+"px" : "-="+__beshift*element.width()+"px";
+							$(handler, element).animate({ 'left': moveTargetX, 'top' : 0 }, function() {
+								// You can call function here.
+							});
+						break;
+					}
+					
+					// refresh nowPage data.
+					element.data('nowPage', page);
+				}
+			}
+		}
+	});
+	
+	$('#addpages').click(function() {
+		if($('#album5').data("initIphoneSlide")) {
+			var element = $('#album5');
+			var handler = ".paging";
+			var pageHandler = ".page";
+			var direction = "horizontal"; 
+			var pageshowfilter = false;
+			
+			$(handler, element).css({ 'left':'0px', 'top':'0px' });
+			element.data("nowPage", 1);
+			
+			var lastitem = $(handler, element).children(pageHandler).filter(':last');
+			
+			var addPages = 5;
+			
+			if(direction=="matrix") {
+				$(handler, element).children(".matrix-break-point").remove();
+				$(handler, element).children(".matrix-blank-page").remove();
+			}
+			
+			for(var i=0; i < addPages; i++) {
+				lastitem.clone().removeAttr("class").removeAttr("id").removeAttr("style")
+				.addClass("page single").css("display", "block").appendTo($(handler, element));
+			}
+			
+			var pageItem;
+			if(!pageshowfilter) {
+				pageItem = $(handler, element).children(pageHandler);
+			} else {
+				pageItem = $(handler, element).children(pageHandler).filter(':visible');
+			}
+			
+			var totalPages = pageItem.length;			
+			switch(direction) {
+				case "matrix":
+					var matrixSqrt = Math.ceil(Math.sqrt(totalPages));
+					var matrixColumn = Math.ceil(totalPages / matrixSqrt);
+					
+					if(matrixColumn*matrixSqrt > totalPages) {
+						for(var i=0; i<(matrixColumn*matrixSqrt - totalPages); i++) {
+							pageItem.filter(":last").clone().removeAttr("id").removeAttr('class')
+							.addClass("page matrix-blank-page").empty().css('display' , 'block')
+							.insertAfter(pageItem.filter(':last'));
+						}
+						totalPages = matrixColumn*matrixSqrt;
+					}
+					for(var i=matrixColumn; i>1; i--) {
+						$('<br class="matrix-break-point" style="clear:both;" />')
+						.insertAfter(pageItem.eq((i-1)*matrixSqrt-1));
+					}
+					
+					$(handler, element)
+						.width(matrixSqrt*element.width())
+						.height(matrixColumn*element.height());
+					
+					element.data('matrixSqrt', matrixSqrt);
+					element.data('matrixColumn', matrixColumn);
+				break;
+				case "vertical":
+					$(handler, element).height(totalPages*element.height());
+				break;
+				case "horizontal":
+				default:
+					$(handler, element).width(totalPages*element.width());
+			}
+			element.data('totalPages', totalPages);
+		}
+	});
+	
+});
+//]]>
+</script>
+<body>
+<div id="container">
+	<h1>jQuery Simple iPhone-Slide plugin v0.32</h1>
+
+	<h2>Download - UPDATE 2010/04/07, support jQuery Easing plugin.</h2>
+	<div>
+		<blockquote>
+			<a href="./scripts/jquery.iphone.slide.js">jquery.iphone.slide.js</a> ( 12.9KB)<br />
+			<a href="./scripts/jquery.iphone.slide.min.js">jquery.iphone.slide.min.js</a> ( 8.8KB)<br />
+			<a href="./scripts/jquery.easing.1.3.min.js">jquery.easing.1.3.min.js</a> ( 5.4KB), via <a href="http://gsgd.co.uk/sandbox/jquery/easing/">http://gsgd.co.uk/sandbox/jquery/easing/</a><br />
+		</blockquote>
+	</div>
+
+	<h2>Configuration</h2>
+	<div>
+	<pre class="brush: js">$('#album').iphoneSlide({
+	// Page items handler, default: the first child of the $('album').
+	handler: undefined,
+	// Pages handler, default: the children of the handler.
+	pageHandler : undefined,
+	// Drag area handler, default: full page area.
+	slideHandler : undefined,
+	// You can define an element to handle this event(default: click) slide to next page.
+	nextPageHandler : '.nextPage',
+	// You can define an element to handle this event(default: click) slide to previous page.
+	prevPageHandler : '.prevPage',
+	// The friction of slide page.
+	friction : 0.325,
+	// When drag&drop page, the point length must be larger than this value which event will be fire.
+	sensitivity : 20,
+	// Slow down the page shift speed(ms).
+	extrashift : 500,
+	// If drag&drop over this time(ms), there will always slide 1 page.
+	touchduring : 800,
+	// Direction of slide, there are three directions you can choose(horizontal, vertical and matrix).
+	direction : 'horizontal',
+	// Max slide page.
+	maxShiftPage : 5,
+	// It's only for dynamic page(s).
+	pageshowfilter : false,
+	// Support jquery easing plugin, via http://gsgd.co.uk/sandbox/jquery/easing/
+	easing: "swing",
+	// When slide page completed, fire this.
+	onShiftComplete : function(elem, page) {
+		// this is parent of the handler.
+		// elem is nowPage's page item.
+		// page is "nowPage".
+	}
+});</pre>	
+	</div>
+	
+	<h2>jQuery</h2>
+	<div>
+	<pre class="brush: js">$('#album').iphoneSlide({
+	handler: "#paging",
+	pageHandler: ".page"
+});</pre>
+	</div>
+	
+	<h2>Style</h2>
+	<div>
+		<pre class="brush: css">
+	#album, .album {
+		width: 450px;
+		height: 450px;
+		overflow: hidden;
+		margin: 0 auto;
+		border: 2px solid #ffffff;
+		background-color: #000000;
+		z-index: -1000;
+	}
+
+	#paging, .paging {
+		position: relative;
+		top: 0px;
+		left: 0px;
+		width: 450px;
+		height: 450px;
+	}
+
+	#paging div.page, .paging div {
+		float: left;
+		width: 440px;
+		height: 440px;
+		margin: 4px;
+		border: 1px solid #666666;
+		background-color: #efefef;
+		background-position: 50% 50%;
+		background-repeat: no-repeat;
+		color: #000000;
+		text-align: center;
+		font-size: 0.85em;
+		display: none;
+		cursor: pointer;
+	}</pre>
+	</div>
+	<h2>HTML</h2>
+	<div>
+		<pre class="brush: html">
+	&lt;div id="album"&gt;
+		&lt;div id="paging"&gt;
+			&lt;div class="page single" style="background-image: url(./images/08.jpg);"&gt;&lt;/div&gt;
+			&lt;div class="page single" style="background-image: url(./images/09.jpg);"&gt;&lt;/div&gt;
+			&lt;div class="page single" style="background-image: url(./images/10.jpg);"&gt;&lt;/div&gt;
+			&lt;div class="page single" style="background-image: url(./images/11.jpg);"&gt;&lt;/div&gt;
+			&lt;div class="page single" style="background-image: url(./images/12.jpg);"&gt;&lt;/div&gt;
+			&lt;div class="page single" style="background-image: url(./images/13.jpg);"&gt;&lt;/div&gt;
+			&lt;div class="page single" style="background-image: url(./images/14.jpg);"&gt;&lt;/div&gt;
+		&lt;/div&gt;
+	&lt;/div&gt;</pre>
+	</div>
+	
+	<h2>DEMO, Default: "Horizontal-slide"</h2>
+	<div>
+		<div id="album" class="album">
+			<div class="paging">
+				<div class="page single" style="background-image: url(./images/08.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/09.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/10.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/11.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/12.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/13.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/14.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/15.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/16.jpg);"></div>
+			</div>
+		</div>
+	</div>
+	
+	<h2>Element data in jQuery</h2>
+	<div>
+	<pre class="brush: js">
+var totalPage = $("#album").data("totalPages");				// Total pages you have.
+var matrixSqrt = $("#album").data("matrixSqrt");			// Use for "matrix-slide", DO NOT MODIFY.
+var matrixColumn = $("#album").data("matrixColumn");		// Use for "matrix-slide", DO NOT MODIFY.
+var nowPage = $("#album").data("nowPage");					// Default "now page" where you are.
+var initIphoneSlide = $("#album").data("initIphoneSlide");	// The plugin setup completed or not.</pre>
+	</div>
+	
+	<h2>DEMO - Vertical-Slide</h2>
+	<div>
+	<pre class="brush: js">$('#album').iphoneSlide({
+	handler: "#paging",
+	pageHandler: ".page",
+	direction: "vertical"
+});</pre>
+		<div id="album3" class="album">
+			<div class="paging">
+				<div class="page single" style="background-image: url(./images/08.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/09.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/10.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/11.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/12.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/13.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/14.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/15.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/16.jpg);"></div>
+			</div>
+		</div>
+	</div>
+	
+	<h2>DEMO - Matrix-Slide</h2>
+	<div>
+	<pre class="brush: js">$('#album').iphoneSlide({
+	handler: "#paging",
+	pageHandler: ".page",
+	direction: "matrix"
+});</pre>
+		<div id="album2" class="album">
+			<div class="paging">
+				<div class="page single" style="background-image: url(./images/08.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/09.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/10.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/11.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/12.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/13.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/14.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/15.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/16.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/17.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/18.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/19.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/20.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/21.jpg);"></div>
+			</div>
+		</div>
+	</div>
+	
+	<h2>HOWTO - Slide to page</h2>
+	<pre class="brush: js">// Make sure the plugin ready.
+if($('#album').data("initIphoneSlide")) {
+	var element = $('#album');
+	var handler = ".paging";
+	var nowPage = parseInt(element.data('nowPage'), 10), 
+		totalPages = parseInt(element.data('totalPages'), 10), 
+		matrixSqrt = parseInt(element.data('matrixSqrt'), 10);
+	
+	// The number of page which I want to go to.
+	var page = 4;
+	// The direction you setup in the plugin's options.
+	var direction = "horizontal"; 
+	
+	if(page>totalPages) {
+		alert('Page cannot over '+totalPages+' page(s).');
+	} else {
+		if(Math.abs(nowPage-page) > 0) {
+			var moveTargetX, moveTargetY, __beshift = Math.abs(nowPage-page);
+			
+			switch(direction) {
+				case "matrix":
+					var nowPageX = (nowPage % matrixSqrt==0) ? matrixSqrt : (nowPage % matrixSqrt);
+					var nowPageY = Math.ceil(nowPage / matrixSqrt);
+					
+					var pageX = (page % matrixSqrt==0) ? matrixSqrt : (page % matrixSqrt);
+					var pageY = Math.ceil(page / matrixSqrt);
+					
+					if(nowPageX-pageX>0) {
+						moveTargetX = "+=";
+					} else if(nowPageX-pageX<0) {
+						moveTargetX = "-=";
+					}
+					moveTargetX += Math.abs(nowPageX-pageX)*element.width()+"px";
+					
+					if(nowPageY-pageY>0) {
+						moveTargetY = "+=";
+					} else if(nowPageY-pageY<0) {
+						moveTargetY = "-=";
+					}
+					moveTargetY += Math.abs(nowPageY-pageY)*element.height()+"px";
+					
+					$(handler, element).animate({ 'top': moveTargetY, 'left': moveTargetX }, function() {
+						// You can call function here.
+					});
+				break;
+				
+				case "vertical":
+					moveTargetY = (nowPage-page > 0) ? "+="+__beshift*element.height()+"px" : "-="+__beshift*element.height()+"px";
+					$(handler, element).animate({ 'top': moveTargetY, 'left' : 0 }, function() {
+						// You can call function here.
+					});
+				break;
+				
+				case "horizontal":
+					moveTargetX = (nowPage-page > 0) ? "+="+__beshift*element.width()+"px" : "-="+__beshift*element.width()+"px";
+					$(handler, element).animate({ 'left': moveTargetX, 'top' : 0 }, function() {
+						// You can call function here.
+					});
+				break;
+			}
+			
+			// refresh nowPage data.
+			element.data('nowPage', page);
+		}
+	}
+}</pre>
+
+	<h2>DEMO, Slide to page</h2>
+	<div>
+		<div id="album4" class="album">
+			<div class="paging">
+				<div class="page single" style="background-image: url(./images/08.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/09.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/10.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/11.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/12.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/13.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/14.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/15.jpg);"></div>
+				<div class="page single" style="background-image: url(./images/16.jpg);"></div>
+			</div>
+		</div>
+		<div class="button"><button id="slidetopage4">Slide to page 4</button></div>
+	</div>
+	
+	<h2>HOWTO - dynamic add pages</h2>
+	<pre class="brush: js">// Make sure the plugin ready.
+if($('#album').data("initIphoneSlide")) {
+	var element = $('#album');
+	var handler = ".paging";
+	// The page handler you setup in the plugin's options.
+	var pageHandler = ".page";
+	// The direction you setup in the plugin's options.
+	var direction = "horizontal"; 
+	// The show page handler in the plugin's options.
+	var pageshowfilter = false;
+	
+	// Reset the handler position and nowPage set to 1.
+	// You can use slide to page you want when add page completed.
+	// DO NOT USE .offset :-P
+	$(handler, element).css({ 'left':'0px', 'top':'0px' });
+	element.data("nowPage", 1);
+	
+	
+	// Get the last page item.
+	var lastitem = $(handler, element).children(pageHandler).filter(':last');
+	
+	// Add blank page
+	var addPages = 5;
+	
+	// Cause the "Matrix-slide" appended the blank items and break point
+	// to page to the n x n square, remove them first.
+	if(direction=="matrix") {
+		$(handler, element).children(".matrix-break-point").remove();
+		$(handler, element).children(".matrix-blank-page").remove();
+	}
+	
+	// Add page
+	for(var i=0; i < addPages; i++) {
+		// Clone and remove all the attribute and add the page handler classes.
+		lastitem.clone().removeAttr("class").removeAttr("id").removeAttr("id")
+		.addClass("page").css("display", "block").appendTo($(handler, element));
+	}
+	
+	var pageItem;
+	if(!pageshowfilter) {
+		pageItem = $(handler, element).children(pageHandler);
+	} else {
+		pageItem = $(handler, element).children(pageHandler).filter(':visible');
+	}
+	
+	var totalPage = pageItem.length;
+	
+	// reset the handler width & height
+	switch(direction) {
+		case "matrix":
+			var matrixSqrt = Math.ceil(Math.sqrt(totalPages));
+			var matrixColumn = Math.ceil(totalPages / matrixSqrt);
+			
+			if(matrixColumn*matrixSqrt > totalPages) {
+				for(var i=0; i<(matrixColumn*matrixSqrt - totalPages); i++) {
+					pageItem.filter(":last").clone().removeAttr("id").removeAttr('class')
+					.addClass("matrix-blank-page").empty().css('display' , 'block')
+					.insertAfter(pageItem.filter(':last'));
+				}
+				totalPages = matrixColumn*matrixSqrt;
+			}
+			for(var i=matrixColumn; i>1; i--) {
+				$('<br class="matrix-break-point" style="clear:both;" />')
+				.insertAfter(pageItem.eq((i-1)*matrixSqrt-1));
+			}
+			
+			$(handler, element)
+				.width(matrixSqrt*element.width())
+				.height(matrixColumn*element.height());
+			
+			// refresh matrixSqrt
+			element.data('matrixSqrt', matrixSqrt);
+		break;
+		case "vertical":
+			$(handler, element).height(totalPages*element.height());
+		break;
+		case "horizontal":
+		default:
+			$(handler, element).width(totalPages*element.width());
+	}
+	
+	// refresh totalpage
+	element.data('totalPages', totalPages);
+}</pre>
+
+	<h2>DEMO, add 5 blank pages</h2>
+	<div id="album5" class="album">
+		<div class="paging">
+			<div class="page single" style="background-image: url(./images/08.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/09.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/10.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/11.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/12.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/13.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/14.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/15.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/16.jpg);"></div>
+		</div>
+	</div>
+	<div class="button"><button id="addpages">Add 5 blank pages</button></div>
+	
+	<h2>HOWTO - Infinite sliding pages</h2>
+<pre class="brush: js">$('#album').iphoneSlide({
+	maxShiftPage : 4,
+	handler: ".paging",
+	pageHandler: ".page",
+	onShiftComplete: 
+		function(elem, page) {
+			var centerPage = 4, handler = $(elem).parent(), ahead, behind;
+			
+			if(page!=centerPage) {
+				for(var i=1; i<=Math.abs(centerPage-page); i++) {
+					ahead = handler.children(':first');
+					behind = handler.children(':last');
+					
+					if(centerPage-page>0) {
+						ahead.before(behind);
+					} else if(centerPage-page<0) {
+						behind.after(ahead);
+					}
+				}
+				handler.css( 'left' , $(this).width()*(1-centerPage));
+				$(this).data('nowPage', centerPage);
+			}
+		}
+	}, function() {
+		var page = $(this).data('nowPage'), centerPage = 4,
+			totalPages = $(this).data('totalPages'), 
+			handler = $(".paging", $(this)), ahead, behind;
+			
+		if(page != centerPage) {
+			ahead = handler.children(':first');
+			behind = handler.children().eq(totalPages-Math.abs(centerPage-page)-1).nextAll();
+			ahead.before(behind);
+			
+			handler.css( 'left' , $(this).width()*(1-centerPage));
+			$(this).data('nowPage', centerPage);
+		}
+	});</pre>
+	
+	<h2>DEMO, infinite sliding pages</h2>
+	<div id="album6" class="album">
+		<div class="paging">
+			<div class="page single" style="background-image: url(./images/08.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/09.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/10.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/11.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/12.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/13.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/14.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/15.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/16.jpg);"></div>
+		</div>
+	</div>
+	
+	<h2>UPDATE - jQuery Easing plugin support.</h2>
+	<pre class="brush: html">&lt;script type="text/javascript" src="./scripts/jquery-1.4.2.js"&gt;&lt;/script&gt;
+&lt;script type="text/javascript" src="./scripts/jquery.easing.1.3.min.js"&gt;&lt;/script&gt;
+&lt;script type="text/javascript" src="./scripts/jquery.iphone.slide.min.js"&gt;&lt;/script&gt;</pre>
+	
+	<pre class="brush: js">$('#album').iphoneSlide({
+	handler: "#paging",
+	pageHandler: ".page",
+	direction: "matrix",
+	easing: "easeOutBounce"
+});</pre>
+
+	<h2>DEMO, jQuery Easing plugin, use "easeOutBounce" effect.</h2>
+	<div id="album7" class="album">
+		<div class="paging">
+			<div class="page single" style="background-image: url(./images/08.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/09.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/10.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/11.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/12.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/13.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/14.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/15.jpg);"></div>
+			<div class="page single" style="background-image: url(./images/16.jpg);"></div>
+		</div>
+	</div>
+</div>
+
+</body> 
+</html>

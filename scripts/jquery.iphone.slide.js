@@ -1,6 +1,6 @@
 /**
  * iphoneSlide - jQuery plugin
- * @version: 0.32 (2010/04/07)
+ * @version: 0.4 (2010/08/26)
  * @requires jQuery v1.3.2 or later 
  * @author Hina, Cain Chen. hinablue [at] gmail [dot] com
  * Examples and documentation at: http://jquery.hinablue.me/jqiphoneslide
@@ -117,7 +117,7 @@
 		}
 		
 		return this.each(function() {
-			var workspace = $(this), handler = $(opts.handler, workspace), totalPages = 0, nowPage = 1, matrixSqrt = 0, matrixColumn = 0;
+			var workspace = $(this), handler = $(opts.handler, workspace), dragAndDrop = {origX:0, origY:0, X:0, Y:0}, totalPages = 0, nowPage = 1, matrixSqrt = 0, matrixColumn = 0;
 			
 			if(workspace.children().length>1) {
 				alert('The Selector('+workspace.attr('id')+')\'s page handler can not more than one element.');
@@ -177,22 +177,26 @@
 				return false;
 			};
 			
-			var __preventClickEvent = false, __mouseStarted = false, __mouseTarget, __mouseDownEvent;
+			var __preventClickEvent = false, __mouseStarted = false, __mouseDownEvent;
 			
 			var __mouseDown = function(event) {
 				if(__mouseStarted) return false;
 				
+                __mouseStarted = true;
+                __mouseDownEvent = event;
+                
 				event.originalEvent = event.originalEvent || {};
 				if (event.originalEvent.mouseHandled) { return; }
 				
 				(__mouseStarted && __mouseUp(event));
 				
-				__mouseDownEvent = event;
-				__mouseTarget = $(event.target);
-				
 				event.preventDefault();
+                
+                var nowPage = workspace.data("nowPage");
+                dragAndDrop.origX = (nowPage-1) * workspace.width();
+                dragAndDrop.origY = (nowPage-1) * workspace.height();
 				
-				workspace.bind('mousemove', __mouseMove).bind('mouseleave mouseup', __mouseUp);
+				workspace.bind('mousemove touchmove', __mouseMove).bind('mouseleave mouseup touchend touchcancel', __mouseUp);
 				
 				event.originalEvent.mouseHandled = true;
 			};
@@ -201,15 +205,35 @@
 				if ($.browser.msie && !event.button) return __mouseUp(event);
 				if(__mouseStarted) return event.preventDefault();
 				
+                /* TODO: Support drag and drop */
+                /*
+                if (__mouseStarted) {
+                    event.preventDefault();
+                    
+                    switch(opts.direction) {
+                        case "matrix":
+                            dragAndDrop.X = parseInt(event.pageX - __mouseDownEvent.pageX);
+                            dragAndDrop.Y = parseInt(event.pageY - __mouseDownEvent.pageY);
+                        break;
+                        case "vertical":
+                            dragAndDrop.Y = parseInt(event.pageY - __mouseDownEvent.pageY);
+                        break;
+                        case "horizontal":
+                        default:
+                            dragAndDrop.X = parseInt(event.pageX - __mouseDownEvent.pageX);
+                    }
+                }
+                */
+                
 				return !__mouseStarted;
 			};
 			
 			var __mouseUp = function(event) {
 				var totalPages = workspace.data("totalPages"), nowPage = workspace.data("nowPage"), matrixSqrt = workspace.data("matrixSqrt"), matrixColumn = workspace.data("matrixColumn");
 			
-				workspace.unbind('mousemove', __mouseMove).unbind('mouseleave mouseup', __mouseUp);
+				workspace.unbind('mousemove touchmove', __mouseMove).unbind('mouseleave mouseup touchend touchcancel', __mouseUp);
 				
-				if (__mouseStarted) __preventClickEvent = (event.target == __mouseDownEvent.target);
+				if(__mouseStarted) __preventClickEvent = (event.target == __mouseDownEvent.target);
 				
 				if(__mouseDistanceMet(event)) {
 					var during, _width = workspace.width(), _height = workspace.height(), timeStamp = Math.abs(__mouseDownEvent.timeStamp - event.timeStamp);
@@ -217,9 +241,6 @@
 					var thisMove = {
 						"X": __getMovingData(_width, __mouseDownEvent.pageX, event.pageX, timeStamp),
 						"Y": __getMovingData(_height, __mouseDownEvent.pageY, event.pageY, timeStamp),
-					}, pages = {
-						"X": (timeStamp>opts.touchduring) ? 1 : Math.ceil(thisMove.X.speed*thisMove.X.shift/_width),
-						"Y": (timeStamp>opts.touchduring) ? 1 : Math.ceil(thisMove.Y.speed*thisMove.Y.shift/_height)
 					}, easing = {
 						"X": Math.min(event.pageX-__mouseDownEvent.pageX , opts.maxShiftPage),
 						"Y": Math.min(event.pageY-__mouseDownEvent.pageY , opts.maxShiftPage)
@@ -230,97 +251,100 @@
 						"EY": "",
 						"shift": Math.max(thisMove.X.shift , thisMove.Y.shift),
 						"speed": Math.max(thisMove.X.speed , thisMove.Y.speed)
-					};
-					
-					during = Math.max(1/shift.speed*Math.abs(opts.extrashift), Math.abs(opts.extrashift)*0.5);
+					}, pages = {
+                        "X": (timeStamp>opts.touchduring || Math.abs(dragAndDrop.X) >= workspace.width()*2/3) ? 1 : Math.ceil(thisMove.X.speed*thisMove.X.shift/_width),
+                        "Y": (timeStamp>opts.touchduring || Math.abs(dragAndDrop.Y) >= workspace.height()*2/3) ? 1 : Math.ceil(thisMove.Y.speed*thisMove.Y.shift/_height)
+                    };
+                    
+                    during = Math.max(1/shift.speed*Math.abs(opts.extrashift), Math.abs(opts.extrashift)*0.5);
 
-					switch(opts.direction) {
-						case "matrix":
-							var pageColumn = Math.ceil(nowPage/matrixSqrt);
-							
-							pages.X = (pages.X>matrixSqrt) ? matrixSqrt : (Math.floor(Math.abs(easing.Y/easing.X))>2) ? 0 : pages.X;
-							pages.Y = (pages.Y>matrixColumn) ? matrixColumn : (Math.floor(Math.abs(easing.X/easing.Y))>2) ? 0 : pages.Y;
-							
-							if(easing.X>0) {
-								pages.X = Math.min(pages.X, (nowPage-matrixSqrt*(pageColumn-1)-1));
-								nowPage = ((nowPage-pages.X)<1) ? 1 : nowPage-pages.X;
-								shift.X = "+=";
-								shift.EX = "-=";
-							} else {
-								pages.X = Math.min(pages.X, (matrixSqrt*pageColumn-nowPage));
-								nowPage = (nowPage+pages.X>totalPages) ? totalPages : nowPage+pages.X;
-								shift.X = "-=";
-								shift.EX = "+=";
-							}
-							shift.X += ((pages.X*_width+shift.shift).toString())+"px";
-							shift.EX += (shift.shift.toString())+"px";
-							
-							if(easing.Y>0) {
-								pages.Y = Math.min(pages.Y, (pageColumn-1));
-								nowPage = ((nowPage-pages.Y*matrixSqrt)<1) ? 1 : nowPage-pages.Y*matrixSqrt;
-								shift.Y = "+=";
-								shift.EY = "-=";
-							} else {
-								pages.Y = ((matrixSqrt*pages.Y+nowPage)>totalPages) ? (matrixColumn-pageColumn) : pages.Y;
-								nowPage = (pages.Y*matrixSqrt>totalPages) ? totalPages : nowPage+pages.Y*matrixSqrt;
-								shift.Y = "-=";
-								shift.EY = "+=";
-							}
-							shift.Y += ((pages.Y*_height+shift.shift).toString())+"px";
-							shift.EY += (shift.shift.toString())+"px";
-						break;
-						case "vertical":
-							pages.X = 0;
-							pages.Y = (pages.Y==0) ? 1 : ((pages.Y>opts.maxShiftPage) ? opts.maxShiftPage : pages.Y);
-							if(easing.Y>0) {
-								pages.Y = ((nowPage-pages.Y)<1) ? nowPage-1 : pages.Y;
-								nowPage = ((nowPage-pages.Y)<1) ? 1 : nowPage-pages.Y;
-								shift.Y = "+=";
-								shift.EY = "-=";
-							} else {
-								pages.Y = ((nowPage + pages.Y)>totalPages) ? totalPages - nowPage : pages.Y;
-								nowPage = ((nowPage + pages.Y)>totalPages) ? totalPages : nowPage+pages.Y;
-								shift.Y = "-=";
-								shift.EY = "+=";
-							}
-							shift.X = "+=0px";
-							shift.Y += ((pages.Y*_height+shift.shift).toString())+"px";
-							shift.EY += (shift.shift.toString())+"px";
-							shift.EX = "+=0px";
-						break;
-						case "horizontal":
-						default:
-							pages.Y = 0;
-							pages.X = (pages.X==0) ? 1 : ((pages.X>opts.maxShiftPage) ? opts.maxShiftPage : pages.X);
-							if(easing.X>0) {
-								pages.X = ((nowPage-pages.X)<1) ? nowPage-1 : pages.X;
-								nowPage = ((nowPage-pages.X)<1) ? 1 : nowPage-pages.X;
-								shift.X = "+=";
-								shift.EX = "-=";
-							} else {
-								pages.X = ((nowPage + pages.X)>totalPages) ? totalPages - nowPage : pages.X;
-								nowPage = ((nowPage + pages.X)>totalPages) ? totalPages : nowPage+pages.X;
-								shift.X = "-=";
-								shift.EX = "+=";
-							}
-							shift.X += ((pages.X*_width+shift.shift).toString())+"px";
-							shift.Y = "+=0px";
-							shift.EX += (shift.shift.toString())+"px";
-							shift.EY = "+=0px"; 
-					}
-					
-					var slideEasing = ($.easing[opts.easing]!==undefined) ? opts.easing : "swing";
-					
-					handler.animate({ 'top': shift.Y, 'left': shift.X }, during)
-					.animate(
-					{ 'top': shift.EY, 'left': shift.EX },
-					{ duration: during, 
-						easing: slideEasing, 
-						complete: function() {
-							__mouseStarted = false;
-							__onSlideCallback(workspace);
-						}
-					});
+                    switch(opts.direction) {
+                        case "matrix":
+                            var pageColumn = Math.ceil(nowPage/matrixSqrt);
+                            
+                            pages.X = (pages.X>matrixSqrt) ? matrixSqrt : (Math.floor(Math.abs(easing.Y/easing.X))>2) ? 0 : pages.X;
+                            pages.Y = (pages.Y>matrixColumn) ? matrixColumn : (Math.floor(Math.abs(easing.X/easing.Y))>2) ? 0 : pages.Y;
+                            
+                            if(easing.X>0) {
+                                pages.X = Math.min(pages.X, (nowPage-matrixSqrt*(pageColumn-1)-1));
+                                nowPage = ((nowPage-pages.X)<1) ? 1 : nowPage-pages.X;
+                                shift.X = "+=";
+                                shift.EX = "-=";
+                            } else {
+                                pages.X = Math.min(pages.X, (matrixSqrt*pageColumn-nowPage));
+                                nowPage = (nowPage+pages.X>totalPages) ? totalPages : nowPage+pages.X;
+                                shift.X = "-=";
+                                shift.EX = "+=";
+                            }
+                            shift.X += ((pages.X*_width+shift.shift).toString())+"px";
+                            shift.EX += (shift.shift.toString())+"px";
+                            
+                            if(easing.Y>0) {
+                                pages.Y = Math.min(pages.Y, (pageColumn-1));
+                                nowPage = ((nowPage-pages.Y*matrixSqrt)<1) ? 1 : nowPage-pages.Y*matrixSqrt;
+                                shift.Y = "+=";
+                                shift.EY = "-=";
+                            } else {
+                                pages.Y = ((matrixSqrt*pages.Y+nowPage)>totalPages) ? (matrixColumn-pageColumn) : pages.Y;
+                                nowPage = (pages.Y*matrixSqrt>totalPages) ? totalPages : nowPage+pages.Y*matrixSqrt;
+                                shift.Y = "-=";
+                                shift.EY = "+=";
+                            }
+                            shift.Y += ((pages.Y*_height+shift.shift).toString())+"px";
+                            shift.EY += (shift.shift.toString())+"px";
+                        break;
+                        case "vertical":
+                            pages.X = 0;
+                            pages.Y = (pages.Y==0) ? 1 : ((pages.Y>opts.maxShiftPage) ? opts.maxShiftPage : pages.Y);
+                            if(easing.Y>0) {
+                                pages.Y = ((nowPage-pages.Y)<1) ? nowPage-1 : pages.Y;
+                                nowPage = ((nowPage-pages.Y)<1) ? 1 : nowPage-pages.Y;
+                                shift.Y = "+=";
+                                shift.EY = "-=";
+                            } else {
+                                pages.Y = ((nowPage + pages.Y)>totalPages) ? totalPages - nowPage : pages.Y;
+                                nowPage = ((nowPage + pages.Y)>totalPages) ? totalPages : nowPage+pages.Y;
+                                shift.Y = "-=";
+                                shift.EY = "+=";
+                            }
+                            shift.X = "+=0px";
+                            shift.Y += ((pages.Y*_height+shift.shift).toString())+"px";
+                            shift.EY += (shift.shift.toString())+"px";
+                            shift.EX = "+=0px";
+                        break;
+                        case "horizontal":
+                        default:
+                            pages.Y = 0;
+                            pages.X = (pages.X==0) ? 1 : ((pages.X>opts.maxShiftPage) ? opts.maxShiftPage : pages.X);
+                            if(easing.X>0) {
+                                pages.X = ((nowPage-pages.X)<1) ? nowPage-1 : pages.X;
+                                nowPage = ((nowPage-pages.X)<1) ? 1 : nowPage-pages.X;
+                                shift.X = "+=";
+                                shift.EX = "-=";
+                            } else {
+                                pages.X = ((nowPage + pages.X)>totalPages) ? totalPages - nowPage : pages.X;
+                                nowPage = ((nowPage + pages.X)>totalPages) ? totalPages : nowPage+pages.X;
+                                shift.X = "-=";
+                                shift.EX = "+=";
+                            }
+                            shift.X += ((pages.X*_width+shift.shift).toString())+"px";
+                            shift.Y = "+=0px";
+                            shift.EX += (shift.shift.toString())+"px";
+                            shift.EY = "+=0px"; 
+                    }
+                    
+                    var slideEasing = ($.easing[opts.easing]!==undefined) ? opts.easing : "swing";
+                    
+                    handler.animate({ 'top': shift.Y, 'left': shift.X }, during)
+                    .animate(
+                    { 'top': shift.EY, 'left': shift.EX },
+                    { duration: during, 
+                        easing: slideEasing, 
+                        complete: function() {
+                            __mouseStarted = false;
+                            __onSlideCallback(workspace);
+                        }
+                    });
 				}
 				workspace.data("nowPage", nowPage);
 				return false;
@@ -336,7 +360,7 @@
 
 			if(opts.slideHandler==undefined || typeof opts.slideHandler !== "string") {
 				workspace
-				.bind("mousedown", __mouseDown)
+				.bind("mousedown touchstart", __mouseDown)
 				.bind("click", function(event) {
 					if(__preventClickEvent) {
 						__preventClickEvent = false;
@@ -346,7 +370,7 @@
 				});
 			} else {
 				handler.filter(opts.slideHandler)
-				.bind("mousedown", __mouseDown)
+				.bind("mousedown touchstart", __mouseDown)
 				.bind("click", function(event) {
 					if(__preventClickEvent) {
 						__preventClickEvent = false;

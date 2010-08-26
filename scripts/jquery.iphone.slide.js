@@ -1,6 +1,6 @@
 /**
  * iphoneSlide - jQuery plugin
- * @version: 0.4 (2010/08/26)
+ * @version: 0.42 (2010/08/26)
  * @requires jQuery v1.3.2 or later 
  * @author Hina, Cain Chen. hinablue [at] gmail [dot] com
  * Examples and documentation at: http://jquery.hinablue.me/jqiphoneslide
@@ -192,9 +192,19 @@
 				
 				event.preventDefault();
                 
-                var nowPage = workspace.data("nowPage");
-                dragAndDrop.origX = (nowPage-1) * workspace.width();
-                dragAndDrop.origY = (nowPage-1) * workspace.height();
+                var nowPage = workspace.data("nowPage"), matrixSqrt = workspace.data("matrixSqrt");
+                switch(opts.direction) {
+                    case "matrix":
+                        dragAndDrop.origX = (Math.ceil(nowPage % matrixSqrt)===0) ? (1-matrixSqrt) * workspace.width() : (1-Math.ceil(nowPage % matrixSqrt)) * workspace.width();
+                        dragAndDrop.origY = (1-Math.ceil(nowPage / matrixSqrt)) * workspace.height();
+                    break;
+                    case "vertical":
+                        dragAndDrop.origY = (1-nowPage) * workspace.height();
+                    break;
+                    case "horizontal":
+                    default:
+                        dragAndDrop.origX = (1-nowPage) * workspace.width();
+                }
 				
 				workspace.bind('mousemove touchmove', __mouseMove).bind('mouseleave mouseup touchend touchcancel', __mouseUp);
 				
@@ -203,10 +213,10 @@
 			
 			var __mouseMove = function(event) {
 				if ($.browser.msie && !event.button) return __mouseUp(event);
-				if(__mouseStarted) return event.preventDefault();
+				//if(__mouseStarted) return event.preventDefault();
 				
                 /* TODO: Support drag and drop */
-                /*
+                
                 if (__mouseStarted) {
                     event.preventDefault();
                     
@@ -214,28 +224,39 @@
                         case "matrix":
                             dragAndDrop.X = parseInt(event.pageX - __mouseDownEvent.pageX);
                             dragAndDrop.Y = parseInt(event.pageY - __mouseDownEvent.pageY);
+                            handler.css({
+                                top: (dragAndDrop.origY + dragAndDrop.Y) + "px",
+                                left: (dragAndDrop.origX + dragAndDrop.X) + "px"
+                            });
                         break;
                         case "vertical":
                             dragAndDrop.Y = parseInt(event.pageY - __mouseDownEvent.pageY);
+                            handler.css({
+                                top: (dragAndDrop.origY + dragAndDrop.Y) + "px"
+                            });
                         break;
                         case "horizontal":
                         default:
                             dragAndDrop.X = parseInt(event.pageX - __mouseDownEvent.pageX);
+                            handler.css({
+                                left: (dragAndDrop.origX + dragAndDrop.X) + "px"
+                            });                    
                     }
                 }
-                */
                 
 				return !__mouseStarted;
 			};
 			
 			var __mouseUp = function(event) {
+            
 				var totalPages = workspace.data("totalPages"), nowPage = workspace.data("nowPage"), matrixSqrt = workspace.data("matrixSqrt"), matrixColumn = workspace.data("matrixColumn");
 			
 				workspace.unbind('mousemove touchmove', __mouseMove).unbind('mouseleave mouseup touchend touchcancel', __mouseUp);
 				
 				if(__mouseStarted) __preventClickEvent = (event.target == __mouseDownEvent.target);
 				
-				if(__mouseDistanceMet(event)) {
+                
+                if(__mouseDistanceMet(event)) {
 					var during, _width = workspace.width(), _height = workspace.height(), timeStamp = Math.abs(__mouseDownEvent.timeStamp - event.timeStamp);
 
 					var thisMove = {
@@ -252,18 +273,25 @@
 						"shift": Math.max(thisMove.X.shift , thisMove.Y.shift),
 						"speed": Math.max(thisMove.X.speed , thisMove.Y.speed)
 					}, pages = {
-                        "X": (timeStamp>opts.touchduring || Math.abs(dragAndDrop.X) >= workspace.width()*2/3) ? 1 : Math.ceil(thisMove.X.speed*thisMove.X.shift/_width),
-                        "Y": (timeStamp>opts.touchduring || Math.abs(dragAndDrop.Y) >= workspace.height()*2/3) ? 1 : Math.ceil(thisMove.Y.speed*thisMove.Y.shift/_height)
+                        "X": (Math.abs(dragAndDrop.X) >= workspace.width()*2/3 || Math.abs(dragAndDrop.Y) >= workspace.height()*2/3) ? 0 : (timeStamp>opts.touchduring) ? 1 : Math.ceil(thisMove.X.speed*thisMove.X.shift/_width),
+                        "Y": (Math.abs(dragAndDrop.X) >= workspace.width()*2/3 || Math.abs(dragAndDrop.Y) >= workspace.height()*2/3) ? 0 : (timeStamp>opts.touchduring) ? 1 : Math.ceil(thisMove.Y.speed*thisMove.Y.shift/_height)
                     };
+                    
+                    if(Math.abs(dragAndDrop.X) >= workspace.width()*2/3 || Math.abs(dragAndDrop.Y) >= workspace.height()*2/3) {
+                        shift.shift = 0;
+                    }
                     
                     during = Math.max(1/shift.speed*Math.abs(opts.extrashift), Math.abs(opts.extrashift)*0.5);
 
                     switch(opts.direction) {
                         case "matrix":
+                        
+                            console.log(dragAndDrop.X, dragAndDrop.Y);
+                        
                             var pageColumn = Math.ceil(nowPage/matrixSqrt);
                             
-                            pages.X = (pages.X>matrixSqrt) ? matrixSqrt : (Math.floor(Math.abs(easing.Y/easing.X))>2) ? 0 : pages.X;
-                            pages.Y = (pages.Y>matrixColumn) ? matrixColumn : (Math.floor(Math.abs(easing.X/easing.Y))>2) ? 0 : pages.Y;
+                            pages.X = (pages.X>matrixSqrt) ? matrixSqrt : (Math.floor(Math.abs(easing.Y/easing.X))>2) ? 0 : (Math.abs(dragAndDrop.X) >= workspace.width()*2/3) ? 1 : pages.X;
+                            pages.Y = (pages.Y>matrixColumn) ? matrixColumn : (Math.floor(Math.abs(easing.X/easing.Y))>2) ? 0 : (Math.abs(dragAndDrop.Y) >= workspace.height()*2/3) ? 1 : pages.Y;
                             
                             if(easing.X>0) {
                                 pages.X = Math.min(pages.X, (nowPage-matrixSqrt*(pageColumn-1)-1));
@@ -276,7 +304,9 @@
                                 shift.X = "-=";
                                 shift.EX = "+=";
                             }
-                            shift.X += ((pages.X*_width+shift.shift).toString())+"px";
+                            dragAndDrop.X = (dragAndDrop.X>0) ? -1 * dragAndDrop.X : dragAndDrop.X;
+                            
+                            shift.X += (pages.X*_width+shift.shift + dragAndDrop.X).toString()+"px";
                             shift.EX += (shift.shift.toString())+"px";
                             
                             if(easing.Y>0) {
@@ -290,7 +320,9 @@
                                 shift.Y = "-=";
                                 shift.EY = "+=";
                             }
-                            shift.Y += ((pages.Y*_height+shift.shift).toString())+"px";
+                            dragAndDrop.Y = (dragAndDrop.Y>0) ? -1 * dragAndDrop.Y : dragAndDrop.Y;
+                            
+                            shift.Y += (pages.Y*_height+shift.shift + dragAndDrop.Y).toString()+"px";
                             shift.EY += (shift.shift.toString())+"px";
                         break;
                         case "vertical":
@@ -307,8 +339,10 @@
                                 shift.Y = "-=";
                                 shift.EY = "+=";
                             }
+                            dragAndDrop.Y = (dragAndDrop.Y>0) ? -1 * dragAndDrop.Y : dragAndDrop.Y;
+                            
                             shift.X = "+=0px";
-                            shift.Y += ((pages.Y*_height+shift.shift).toString())+"px";
+                            shift.Y += ((pages.Y*_height+shift.shift + dragAndDrop.Y).toString())+"px";
                             shift.EY += (shift.shift.toString())+"px";
                             shift.EX = "+=0px";
                         break;
@@ -327,14 +361,15 @@
                                 shift.X = "-=";
                                 shift.EX = "+=";
                             }
-                            shift.X += ((pages.X*_width+shift.shift).toString())+"px";
+                            dragAndDrop.X = (dragAndDrop.X>0) ? -1 * dragAndDrop.X : dragAndDrop.X;
+                            
+                            shift.X += (pages.X*_width+shift.shift + dragAndDrop.X).toString()+"px";
                             shift.Y = "+=0px";
                             shift.EX += (shift.shift.toString())+"px";
-                            shift.EY = "+=0px"; 
+                            shift.EY = "+=0px";
                     }
                     
                     var slideEasing = ($.easing[opts.easing]!==undefined) ? opts.easing : "swing";
-                    
                     handler.animate({ 'top': shift.Y, 'left': shift.X }, during)
                     .animate(
                     { 'top': shift.EY, 'left': shift.EX },

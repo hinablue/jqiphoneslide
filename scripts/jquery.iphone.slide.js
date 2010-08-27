@@ -1,6 +1,6 @@
 /**
  * iphoneSlide - jQuery plugin
- * @version: 0.42 (2010/08/26)
+ * @version: 0.45 (2010/08/26)
  * @requires jQuery v1.3.2 or later 
  * @author Hina, Cain Chen. hinablue [at] gmail [dot] com
  * Examples and documentation at: http://jquery.hinablue.me/jqiphoneslide
@@ -16,6 +16,7 @@
 		slideHandler : undefined,
 		nextPageHandler : '.nextPage',
 		prevPageHandler : '.prevPage',
+        draglaunch: 0.5,
 		friction : 0.325,
 		sensitivity : 20,
 		extrashift : 800,
@@ -263,8 +264,8 @@
 						"X": __getMovingData(_width, __mouseDownEvent.pageX, event.pageX, timeStamp),
 						"Y": __getMovingData(_height, __mouseDownEvent.pageY, event.pageY, timeStamp),
 					}, easing = {
-						"X": Math.min(event.pageX-__mouseDownEvent.pageX , opts.maxShiftPage),
-						"Y": Math.min(event.pageY-__mouseDownEvent.pageY , opts.maxShiftPage)
+						"X": Math.min(event.pageX-__mouseDownEvent.pageX , _width),
+						"Y": Math.min(event.pageY-__mouseDownEvent.pageY , _height)
 					}, shift = {
 						"X": "",
 						"Y": "",
@@ -273,11 +274,11 @@
 						"shift": Math.max(thisMove.X.shift , thisMove.Y.shift),
 						"speed": Math.max(thisMove.X.speed , thisMove.Y.speed)
 					}, pages = {
-                        "X": (Math.abs(dragAndDrop.X) >= workspace.width()*2/3 || Math.abs(dragAndDrop.Y) >= workspace.height()*2/3) ? 0 : (timeStamp>opts.touchduring) ? 1 : Math.ceil(thisMove.X.speed*thisMove.X.shift/_width),
-                        "Y": (Math.abs(dragAndDrop.X) >= workspace.width()*2/3 || Math.abs(dragAndDrop.Y) >= workspace.height()*2/3) ? 0 : (timeStamp>opts.touchduring) ? 1 : Math.ceil(thisMove.Y.speed*thisMove.Y.shift/_height)
+                        "X": (Math.abs(dragAndDrop.X) >= workspace.width()*opts.draglaunch || Math.abs(dragAndDrop.Y) >= workspace.height()*opts.draglaunch) ? 0 : (timeStamp>opts.touchduring) ? 1 : Math.ceil(thisMove.X.speed*thisMove.X.shift/_width),
+                        "Y": (Math.abs(dragAndDrop.X) >= workspace.width()*opts.draglaunch || Math.abs(dragAndDrop.Y) >= workspace.height()*opts.draglaunch) ? 0 : (timeStamp>opts.touchduring) ? 1 : Math.ceil(thisMove.Y.speed*thisMove.Y.shift/_height)
                     };
                     
-                    if(Math.abs(dragAndDrop.X) >= workspace.width()*2/3 || Math.abs(dragAndDrop.Y) >= workspace.height()*2/3) {
+                    if(Math.abs(dragAndDrop.X) >= workspace.width()*opts.draglaunch || Math.abs(dragAndDrop.Y) >= workspace.height()*opts.draglaunch) {
                         shift.shift = 0;
                     }
                     
@@ -285,14 +286,11 @@
 
                     switch(opts.direction) {
                         case "matrix":
-                        
-                            console.log(dragAndDrop.X, dragAndDrop.Y);
-                        
                             var pageColumn = Math.ceil(nowPage/matrixSqrt);
                             
-                            pages.X = (pages.X>matrixSqrt) ? matrixSqrt : (Math.floor(Math.abs(easing.Y/easing.X))>2) ? 0 : (Math.abs(dragAndDrop.X) >= workspace.width()*2/3) ? 1 : pages.X;
-                            pages.Y = (pages.Y>matrixColumn) ? matrixColumn : (Math.floor(Math.abs(easing.X/easing.Y))>2) ? 0 : (Math.abs(dragAndDrop.Y) >= workspace.height()*2/3) ? 1 : pages.Y;
-                            
+                            pages.X = (pages.X>matrixSqrt) ? matrixSqrt : ((Math.abs(dragAndDrop.X) >= workspace.width()*opts.draglaunch) ? 1 : ((Math.floor(Math.abs(easing.Y/easing.X))>2) ? 0 : pages.X));
+                            pages.Y = (pages.Y>matrixColumn) ? matrixColumn : ((Math.abs(dragAndDrop.Y) >= workspace.height()*opts.draglaunch) ? 1 : ((Math.floor(Math.abs(easing.X/easing.Y))>2) ? 0 : pages.Y));
+
                             if(easing.X>0) {
                                 pages.X = Math.min(pages.X, (nowPage-matrixSqrt*(pageColumn-1)-1));
                                 nowPage = ((nowPage-pages.X)<1) ? 1 : nowPage-pages.X;
@@ -304,7 +302,7 @@
                                 shift.X = "-=";
                                 shift.EX = "+=";
                             }
-                            dragAndDrop.X = (dragAndDrop.X>0) ? -1 * dragAndDrop.X : dragAndDrop.X;
+                            dragAndDrop.X = (dragAndDrop.X>0) ? -1*dragAndDrop.X : dragAndDrop.X;
                             
                             shift.X += (pages.X*_width+shift.shift + dragAndDrop.X).toString()+"px";
                             shift.EX += (shift.shift.toString())+"px";

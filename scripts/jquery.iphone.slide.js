@@ -1,6 +1,6 @@
 /**
  * iphoneSlide - jQuery plugin
- * @version: 0.45 (2010/08/26)
+ * @version: 0.48 (2010/08/30)
  * @requires jQuery v1.3.2 or later 
  * @author Hina, Cain Chen. hinablue [at] gmail [dot] com
  * Examples and documentation at: http://jquery.hinablue.me/jqiphoneslide
@@ -119,7 +119,8 @@
 		
 		return this.each(function() {
 			var workspace = $(this), handler = $(opts.handler, workspace), dragAndDrop = {origX:0, origY:0, X:0, Y:0}, totalPages = 0, nowPage = 1, matrixSqrt = 0, matrixColumn = 0;
-			
+			var mobileDevice = (navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i) || navigator.userAgent.match(/Android/i)) ? true : false;
+            
 			if(workspace.children().length>1) {
 				alert('The Selector('+workspace.attr('id')+')\'s page handler can not more than one element.');
 				return this;
@@ -185,12 +186,7 @@
 				
                 __mouseStarted = true;
                 __mouseDownEvent = event;
-                
-				event.originalEvent = event.originalEvent || {};
-				if (event.originalEvent.mouseHandled) { return; }
-				
-				(__mouseStarted && __mouseUp(event));
-				
+
 				event.preventDefault();
                 
                 var nowPage = workspace.data("nowPage"), matrixSqrt = workspace.data("matrixSqrt");
@@ -207,38 +203,45 @@
                         dragAndDrop.origX = (1-nowPage) * workspace.width();
                 }
 				
-				workspace.bind('mousemove touchmove', __mouseMove).bind('mouseleave mouseup touchend touchcancel', __mouseUp);
-				
-				event.originalEvent.mouseHandled = true;
+                if(opts.slideHandler==undefined || typeof opts.slideHandler !== "string" || mobileDevice===true) {
+                    if(mobileDevice===true) {
+                        document.getElementById(workspace.attr("id")).addEventListener("touchmove", __mouseMove, false);
+                        document.getElementById(workspace.attr("id")).addEventListener("touchend", __mouseUp, false);
+                    } else {
+                        workspace.bind("mousemove", __mouseMove, false).bind("mouseleave mouseup", __mouseUp, false);
+                    }
+                } else {
+                    handler.bind("mousemove", __mouseMove, false).bind("mouseleave mouseup", __mouseUp, false);
+                }
 			};
 			
 			var __mouseMove = function(event) {
 				if ($.browser.msie && !event.button) return __mouseUp(event);
-				//if(__mouseStarted) return event.preventDefault();
-				
-                /* TODO: Support drag and drop */
                 
                 if (__mouseStarted) {
                     event.preventDefault();
                     
+                    var __eventTouches = (mobileDevice!==true) ? event : event.changedTouches[0];
+                    var __mouseDownTouches = (mobileDevice!==true) ? __mouseDownEvent : __mouseDownEvent.changedTouches[0];
+                    
                     switch(opts.direction) {
                         case "matrix":
-                            dragAndDrop.X = parseInt(event.pageX - __mouseDownEvent.pageX);
-                            dragAndDrop.Y = parseInt(event.pageY - __mouseDownEvent.pageY);
+                            dragAndDrop.X = parseInt(__eventTouches.pageX - __mouseDownTouches.pageX);
+                            dragAndDrop.Y = parseInt(__eventTouches.pageY - __mouseDownTouches.pageY);
                             handler.css({
                                 top: (dragAndDrop.origY + dragAndDrop.Y) + "px",
                                 left: (dragAndDrop.origX + dragAndDrop.X) + "px"
                             });
                         break;
                         case "vertical":
-                            dragAndDrop.Y = parseInt(event.pageY - __mouseDownEvent.pageY);
+                            dragAndDrop.Y = parseInt(__eventTouches.pageY - __mouseDownTouches.pageY);
                             handler.css({
                                 top: (dragAndDrop.origY + dragAndDrop.Y) + "px"
                             });
                         break;
                         case "horizontal":
                         default:
-                            dragAndDrop.X = parseInt(event.pageX - __mouseDownEvent.pageX);
+                            dragAndDrop.X = parseInt(__eventTouches.pageX - __mouseDownTouches.pageX);
                             handler.css({
                                 left: (dragAndDrop.origX + dragAndDrop.X) + "px"
                             });                    
@@ -247,25 +250,39 @@
                 
 				return !__mouseStarted;
 			};
-			
+            
 			var __mouseUp = function(event) {
             
 				var totalPages = workspace.data("totalPages"), nowPage = workspace.data("nowPage"), matrixSqrt = workspace.data("matrixSqrt"), matrixColumn = workspace.data("matrixColumn");
-			
-				workspace.unbind('mousemove touchmove', __mouseMove).unbind('mouseleave mouseup touchend touchcancel', __mouseUp);
-				
-				if(__mouseStarted) __preventClickEvent = (event.target == __mouseDownEvent.target);
-				
                 
-                if(__mouseDistanceMet(event)) {
+                if(opts.slideHandler==undefined || typeof opts.slideHandler !== "string" || mobileDevice===true) {
+                    if(mobileDevice===true) {
+                        document.getElementById(workspace.attr("id")).removeEventListener("touchmove", __mouseMove, false);
+                    } else {
+                        workspace.unbind("mousemove", __mouseMove, false);
+                    }
+                } else {
+                    handler.unbind("mousemove", __mouseMove, false);
+                }
+
+				if(__mouseStarted) __preventClickEvent = (event.target == __mouseDownEvent.target);
+                
+                var __eventTouches = (mobileDevice!==true) ? event : event.changedTouches[0];
+                var __mouseDownTouches = (mobileDevice!==true) ? __mouseDownEvent : __mouseDownEvent.changedTouches[0];
+                
+                if(Math.max(
+						Math.abs(__mouseDownTouches.pageX - __eventTouches.pageX),
+						Math.abs(__mouseDownTouches.pageY - __eventTouches.pageY)
+						) >= parseInt(opts.sensitivity)
+                ) {
 					var during, _width = workspace.width(), _height = workspace.height(), timeStamp = Math.abs(__mouseDownEvent.timeStamp - event.timeStamp);
 
 					var thisMove = {
-						"X": __getMovingData(_width, __mouseDownEvent.pageX, event.pageX, timeStamp),
-						"Y": __getMovingData(_height, __mouseDownEvent.pageY, event.pageY, timeStamp),
+						"X": __getMovingData(_width, __mouseDownTouches.pageX, __eventTouches.pageX, timeStamp),
+						"Y": __getMovingData(_height, __mouseDownTouches.pageY, __eventTouches.pageY, timeStamp),
 					}, easing = {
-						"X": Math.min(event.pageX-__mouseDownEvent.pageX , _width),
-						"Y": Math.min(event.pageY-__mouseDownEvent.pageY , _height)
+						"X": Math.min(__eventTouches.pageX-__mouseDownTouches.pageX , _width),
+						"Y": Math.min(__eventTouches.pageY-__mouseDownTouches.pageY , _height)
 					}, shift = {
 						"X": "",
 						"Y": "",
@@ -378,44 +395,50 @@
                             __onSlideCallback(workspace);
                         }
                     });
-				}
-				workspace.data("nowPage", nowPage);
+				} else {
+                    __mouseStarted =  false;
+                }
+
+                if(mobileDevice===true) {
+                    document.getElementById(workspace.attr("id")).removeEventListener("touchend", __mouseUp, false);
+                } else {
+                    workspace.data("nowPage", nowPage).unbind("mouseleave mouseup", __mouseUp, false);
+                }
+                workspace.data("nowPage", nowPage);
 				return false;
 			};
-			
-			var __mouseDistanceMet = function(event) {
-				return (Math.max(
-						Math.abs(__mouseDownEvent.pageX - event.pageX),
-						Math.abs(__mouseDownEvent.pageY - event.pageY)
-						) >= parseInt(opts.sensitivity)
-				);
-			};
 
-			if(opts.slideHandler==undefined || typeof opts.slideHandler !== "string") {
-				workspace
-				.bind("mousedown touchstart", __mouseDown)
-				.bind("click", function(event) {
-					if(__preventClickEvent) {
-						__preventClickEvent = false;
-						event.stopImmediatePropagation();
-						return false;
-					}
-				});
+			if(opts.slideHandler==undefined || typeof opts.slideHandler !== "string" || mobileDevice===true) {
+                if(mobileDevice===true) {
+                    document.getElementById(workspace.attr("id")).addEventListener("touchstart", __mouseDown, false);
+                } else {
+                    workspace
+                    .bind("mousedown", __mouseDown, false)
+                    .bind("click", function(event) {
+                        if(__preventClickEvent) {
+                            __preventClickEvent = false;
+                            event.stopImmediatePropagation();
+                            return false;
+                        }
+                    }, false);
+                }
 			} else {
-				handler.filter(opts.slideHandler)
-				.bind("mousedown touchstart", __mouseDown)
-				.bind("click", function(event) {
-					if(__preventClickEvent) {
-						__preventClickEvent = false;
-						event.stopImmediatePropagation();
-						return false;
-					}
-				});			
+                handler.filter(opts.slideHandler)
+                .bind("mousedown", __mouseDown, false)
+                .bind("click", function(event) {
+                    if(__preventClickEvent) {
+                        __preventClickEvent = false;
+                        event.stopImmediatePropagation();
+                        return false;
+                    }
+                }, false);
 			}
 			
-			handler.filter(opts.nextPageHandler).bind("click", __slideNextPage);
-			handler.filter(opts.nextPageHandler).bind("click", __slidePrevPage);	
-			
+            if(mobileDevice!==true) {
+                handler.filter(opts.nextPageHandler).bind("click", __slideNextPage, false);
+                handler.filter(opts.nextPageHandler).bind("click", __slidePrevPage, false);	
+            }
+            
 			__initPages(workspace);
 			
 			return this;

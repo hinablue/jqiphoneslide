@@ -71,3 +71,6 @@ button {
 	display: none;
 	cursor: pointer;
 }
+
+.paging div.p1, .paging div.p3, .paging div.p5, .paging div.p7, .paging div.p9
+{ width: 500px; height: 500px; }

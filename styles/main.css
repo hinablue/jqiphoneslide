@@ -39,17 +39,17 @@ button {
 }
 
 #album, .album {
+    position: relative;
 	width: 450px;
 	height: 450px;
 	overflow: hidden;
 	margin: 0 auto;
 	border: 2px solid #ffffff;
 	background-color: #000000;
-	z-index: -1000;
 }
 
 #paging, .paging {
-	position: relative;
+	position: absolute;
 	top: 0px;
 	left: 0px;
 	width: 450px;

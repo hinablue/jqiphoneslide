@@ -4,7 +4,7 @@
 <meta http-equiv="content-Type" content="text/html; charset=utf-8" /> 
 <meta http-equiv="imagetoolbar" content="no" /> 
 <meta name="robots" content="noodp" /> 
-<title>jQuery Simple iPhone Slide v0.4</title> 
+<title>jQuery Simple iPhone Slide v0.5</title> 
 <link rel="stylesheet" media="screen" type="text/css" href="./styles/base.css" />
 <link rel="stylesheet" media="screen" type="text/css" href="./styles/main.css" />
 
@@ -18,7 +18,7 @@
 <script type="text/javascript" src="./syntaxhighlighter/scripts/shBrushXml.js"></script>
 <script type="text/javascript" src="./scripts/jquery-1.4.2.min.js"></script>
 <script type="text/javascript" src="./scripts/jquery.easing.1.3.min.js"></script>
-<script type="text/javascript" src="./scripts/jquery.iphone.slide.js"></script>
+<script type="text/javascript" src="./scripts/jquery.iphone-slide.js"></script>
 </head>
 
 <script type="text/javascript">
@@ -43,7 +43,7 @@ $(document).ready(function() {
 		pageHandler: ".page",
 		direction: "vertical"
 	});
-	
+/*	
 	$('#album6').iphoneSlide({
 		maxShiftPage : 4,
 		handler: ".paging",
@@ -77,14 +77,14 @@ $(document).ready(function() {
 			$(this).data('nowPage', centerPage);
 		}
 	});
-	
+*/	
 	$('#album7').iphoneSlide({
 		handler: ".paging",
 		pageHandler: ".page",
 		direction: "matrix",
 		easing: "easeOutBounce"
 	});
-	
+/*	
 	$('#slidetopage4').click(function() {
 		if($('#album4').data("initIphoneSlide")) {
 			var element = $('#album4');
@@ -221,19 +221,20 @@ $(document).ready(function() {
 			element.data('totalPages', totalPages);
 		}
 	});
-	
+*/	
 });
 //]]>
 </script>
 <body>
 <div id="container">
-	<h1>jQuery Simple iPhone-Slide plugin v0.48</h1>
+	<h1>jQuery Simple iPhone-Slide plugin v0.5</h1>
 
-	<h2>Download - UPDATE 2010/08/30, support Mobile device touch events.</h2>
+    <h2>Download - UPDATE 2011/03/14, support Mobile device touch events, tested on iPhone4.</h2>
+    <h2>Needed - jQuery 1.4+</h2>
 	<div>
 		<blockquote>
-			<a href="./scripts/jquery.iphone.slide.js">jquery.iphone.slide.js</a> ( 24.5KB)<br />
-			<a href="./scripts/jquery.iphone.slide.min.js">jquery.iphone.slide.min.js</a> ( 12.2KB)<br />
+			<a href="./scripts/jquery.iphone-slide.js">jquery.iphone-slide.js</a> ( 23.6KB)<br />
+			<a href="./scripts/jquery.iphone.slide.min.js">jquery.iphone.slide.min.js</a> ( 9.8KB)<br />
 			<a href="./scripts/jquery.easing.1.3.min.js">jquery.easing.1.3.min.js</a> ( 5.4KB), via <a href="http://gsgd.co.uk/sandbox/jquery/easing/">http://gsgd.co.uk/sandbox/jquery/easing/</a><br />
 		</blockquote>
 	</div>
@@ -287,18 +288,18 @@ $(document).ready(function() {
 	<h2>Style</h2>
 	<div>
 		<pre class="brush: css">
-	#album, .album {
+    #album, .album {
+        position: relative;
 		width: 450px;
 		height: 450px;
 		overflow: hidden;
 		margin: 0 auto;
 		border: 2px solid #ffffff;
 		background-color: #000000;
-		z-index: -1000;
 	}
 
 	#paging, .paging {
-		position: relative;
+		position: absolute;
 		top: 0px;
 		left: 0px;
 		width: 450px;
@@ -357,13 +358,24 @@ $(document).ready(function() {
 	<h2>Element data in jQuery</h2>
 	<div>
 	<pre class="brush: js">
-var totalPage = $("#album").data("totalPages");				// Total pages you have.
-var matrixSqrt = $("#album").data("matrixSqrt");			// Use for "matrix-slide", DO NOT MODIFY.
-var matrixColumn = $("#album").data("matrixColumn");		// Use for "matrix-slide", DO NOT MODIFY.
-var nowPage = $("#album").data("nowPage");					// Default "now page" where you are.
-var initIphoneSlide = $("#album").data("initIphoneSlide");	// The plugin setup completed or not.</pre>
+// worksapce Data Object, DO NOT MODIFY if you don't know what you do.
+var workspaceData = $("#album").data("workData"); 
+// Total pages you have, DO NOT MODIFY if you don't know what you do.
+var totalPage = parseInt(workspaceData.totalPages);
+// Use for "matrix-slide", DO NOT MODIFY if you don't know what you do.
+var matrixSqrt = parseInt(workspaceData.matrixRow);
+// Use for "matrix-slide", DO NOT MODIFY if you don't know what you do.
+var matrixColumn = parseInt(worksapceData.matrixColumn);
+// Default "now page" where you are, DO NOT MODIFY if you don't know what you do.
+var nowPage = parseInt(workspaceData.nowPage);
+// The plugin setup completed or not, DO NOT MODIFY if you don't know what you do.
+var initIphoneSlide = workspaceData.initIphoneSlide;
+// Total width with all the pages, DO NOT MODIFY if you don't know what you do.
+var pagesOuterWidth = parseInt(workspaceData.pagesOuterWidth);
+// Total height with all the pages, DO NOT MODIFY if you don't know what you do.
+var pagesOuterHeight = parseInt(workspaceData.pagesOuterHeight);</pre>
 	</div>
-	
+
 	<h2>DEMO - Vertical-Slide</h2>
 	<div>
 	<pre class="brush: js">$('#album').iphoneSlide({
@@ -412,7 +424,7 @@ var initIphoneSlide = $("#album").data("initIphoneSlide");	// The plugin setup c
 			</div>
 		</div>
 	</div>
-	
+<!--	
 	<h2>HOWTO - Slide to page</h2>
 	<pre class="brush: js">// Make sure the plugin ready.
 if($('#album').data("initIphoneSlide")) {
@@ -654,11 +666,11 @@ if($('#album').data("initIphoneSlide")) {
 			<div class="page single" style="background-image: url(./images/16.jpg);"></div>
 		</div>
 	</div>
-	
+-->
 	<h2>UPDATE - jQuery Easing plugin support.</h2>
 	<pre class="brush: html">&lt;script type="text/javascript" src="./scripts/jquery-1.4.2.js"&gt;&lt;/script&gt;
 &lt;script type="text/javascript" src="./scripts/jquery.easing.1.3.min.js"&gt;&lt;/script&gt;
-&lt;script type="text/javascript" src="./scripts/jquery.iphone.slide.min.js"&gt;&lt;/script&gt;</pre>
+&lt;script type="text/javascript" src="./scripts/jquery.iphone-slide.min.js"&gt;&lt;/script&gt;</pre>
 	
 	<pre class="brush: js">$('#album').iphoneSlide({
 	handler: "#paging",

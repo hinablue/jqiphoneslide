@@ -1,6 +1,6 @@
 /**
  * iphoneSlide - jQuery plugin
- * @version: 0.5 (2011/03/14)
+ * @version: 0.51 (2011/03/14)
  * @requires jQuery v1.4+
  * @author Hina, Cain Chen. hinablue [at] gmail [dot] com
  * Examples and documentation at: http://jquery.hinablue.me/jqiphoneslide
@@ -13,9 +13,9 @@
 (function($) {
 
     var defaults = {
-        handler: undefined,
-        pageHandler : undefined,
-        slideHandler : undefined,
+        handler: null,
+        pageHandler : null,
+        slideHandler : null,
         direction : 'horizontal',
         maxShiftPage : 5,
         nextPageHandler : '.nextPage',
@@ -26,6 +26,7 @@
         extrashift : 800,
         touchduring : 800,
         easing: "swing",
+        bounce: true,
         pageshowfilter : false,
         onShiftComplete : function() {}
     };
@@ -206,7 +207,7 @@
                 return this;
             }
 
-            if (opts.handler === undefined || typeof opts.handler !== "string") {
+            if (opts.handler === null || typeof opts.handler !== "string") {
                 opts.handler = ".iphone-slide-page-handler";
                 workspace.children(':first').addClass('iphone-slide-page-handler');
             }
@@ -216,7 +217,7 @@
                 return this;
             }
 
-            if (opts.pageHandler === undefined || typeof opts.pageHandler !== "string") {
+            if (opts.pageHandler === null || typeof opts.pageHandler !== "string") {
                 switch(handler.attr('tagName').toLowerCase()) {
                     case "ul":
                     case "ol":
@@ -284,7 +285,7 @@
                 dragAndDrop.origX = $(this).position().left;
                 dragAndDrop.origY = $(this).position().top;
 
-                if (opts.slideHandler === undefined || typeof opts.slideHandler !== "string") {
+                if (opts.slideHandler === null || typeof opts.slideHandler !== "string") {
                     handler.bind("mousemove touchmove", __mouseMove, false).bind("mouseleave mouseup touchend touchcancel", __mouseUp, false);
                 } else {
                     handler.filter(opts.slideHandler).bind("mousemove touchmove", __mouseMove, false).bind("mouseleave mouseup touchend touchcancel", __mouseUp, false);
@@ -334,7 +335,7 @@
 
                 event.preventDefault();
 
-                if (opts.slideHandler === undefined || typeof opts.slideHandler !== "string") {
+                if (opts.slideHandler === null || typeof opts.slideHandler !== "string") {
                     handler.unbind("mousemove touchmove", __mouseMove, false);
                 } else {
                     handler.filter(opts.slideHandler).unbind("mousemove touchmove", __mouseMove, false);
@@ -415,10 +416,10 @@
                             nowPage = (easing.X > 0) ? (((nowPage-pages.X)<1) ? 1 : nowPage-pages.X) : (((nowPage + pages.X)>totalPages) ? totalPages : nowPage+pages.X);
                     }
 
-                    var __animate = __slidingToPage(nowPage, easing);
+                    var __animate = (opts.bounce === true) ? __slidingToPage(nowPage, easing) : __slidingToPage(nowPage, 0);
 
-                    $(this).animate(__animate.before, during)
-                    .animate(__animate.after, during, ($.easing[opts.easing]!==undefined ? opts.easing : "swing"), function() {
+                    if (opts.bounce === true) $(this).animate(__animate.before, during);
+                    $(this).animate(__animate.after, during, ($.easing[opts.easing]!==undefined ? opts.easing : "swing"), function() {
                         __mouseStarted = false;
                         __onSlideCallback();
                     });
@@ -428,7 +429,7 @@
                     });
                 }
 
-                if (opts.slideHandler === undefined || typeof opts.slideHandler !== "string") {
+                if (opts.slideHandler === null || typeof opts.slideHandler !== "string") {
                     $(this).unbind("mouseleave mouseup touchend", __mouseUp, false);
                 } else {
                     $(this).filter(opts.slideHandler).unbind("mouseleave mouseup touchend", __mouseUp, false);
@@ -439,7 +440,7 @@
                 return !__mouseStarted;
             };
 
-            if(opts.slideHandler === undefined || typeof opts.slideHandler !== "string") {
+            if(opts.slideHandler === null || typeof opts.slideHandler !== "string") {
                 handler
                     .bind("mousedown touchstart", __mouseDown, false)
                     .bind("click", function(event) {

@@ -227,8 +227,9 @@ $(document).ready(function() {
 </script>
 <body>
 <div id="container">
-	<h1>jQuery Simple iPhone-Slide plugin v0.5</h1>
+	<h1>jQuery Simple iPhone-Slide plugin v0.51</h1>
 
+    <h2>UPDATE 2011/04/19, you can turn on/off default animate effect within "bounce".</h2>
     <h2>UPDATE 2011/03/20, new styling with workspace, you can set different size in your pages.</h2>
     <h2>UPDATE 2011/03/14, support Mobile device touch events, tested on iPhone4.</h2>
     <h2>Needed - jQuery 1.4+</h2>
@@ -268,7 +269,9 @@ $(document).ready(function() {
 	// It's only for dynamic page(s).
 	pageshowfilter : false,
 	// Support jquery easing plugin, via http://gsgd.co.uk/sandbox/jquery/easing/
-	easing: "swing",
+    easing: "swing",
+    // Turn on/off default animate effect "bounce".
+    bounce: true,
 	// When slide page completed, fire this.
 	onShiftComplete : function(elem, page) {
 		// this is parent of the handler.

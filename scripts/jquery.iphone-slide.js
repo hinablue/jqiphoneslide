@@ -1,6 +1,6 @@
 /**
  * iphoneSlide - jQuery plugin
- * @version: 0.51 (2011/03/14)
+ * @version: 0.53 (2011/04/25)
  * @requires jQuery v1.4+
  * @author Hina, Cain Chen. hinablue [at] gmail [dot] com
  * Examples and documentation at: http://jquery.hinablue.me/jqiphoneslide
@@ -32,9 +32,9 @@
     };
 
     $.fn.iphoneSlide = function(options, callback) {
-        var workspace = $(this), opts = $.extend({}, defaults, options), callback = (typeof callback === "function") ? callback : function() { return false; };
+        var opts = $.extend({}, defaults, options), callback = (typeof callback === "function") ? callback : function() { return false; };
 
-        function __getMovingData(w, s, e, t) {
+        var __getMovingData = function(w, s, e, t) {
             var v = 0, ex = 0, w = w*1, s = s*1, e = e*1, t = t*1;
 
             v = (Math.abs(s - e) / Math.abs(t));
@@ -42,9 +42,9 @@
             ex = (s>w/2) ? Math.floor(w/3) : s;
 
             return {"speed":v, "shift":ex};
-        }
+        };
 
-        function __initPages() {
+        var __initPages = function(workspace) {
             var totalPages, 
                 handler = $(opts.handler, workspace), 
                 pagesHandler = (!opts.pageshowfilter) ? handler.children(opts.pageHandler) : handler.children(opts.pageHandler).filter(':visible'), 
@@ -132,10 +132,12 @@
                  })
             );
 
-            if($.isFunction(callback)) callback.call(workspace);
-        }
+            workspace.data("options", opts);
 
-        function __onSlideCallback() {
+            if($.isFunction(callback)) callback.call(workspace);
+        };
+
+        var __onSlideCallback = function(workspace) {
             var workData = workspace.data("workData"), nowPage = workData.nowPage;
 
             if(opts.pageshowfilter) {
@@ -143,9 +145,9 @@
             } else {
                 opts.onShiftComplete.call(workspace, $(opts.handler, workspace).children(opts.pageHandler).eq(nowPage-1), nowPage);
             }
-        }
+        };
 
-        function __slidingToPage(page, easing) {
+        var __slidingToPage = function(page, easing, workspace) {
             var page = page, 
                 easing = easing || { "X":0, "Y": 0},
                 handler = $(opts.handler, workspace), 
@@ -186,9 +188,9 @@
             }
 
             return __animate;
-        }
+        };
 
-        return this.each(function() {
+        return $(this).each(function() {
             var workspace = $(this), workData = workspace.data("workData"), 
                 handler = $(opts.handler, workspace), 
                 dragAndDrop = $.extend({}, { origX:0, origY:0, X:0, Y:0 }), 
@@ -196,11 +198,7 @@
                 totalPages = matrixRow = matrixColumn = 0,
                 nowPage = 1,
                 __preventClickEvent = __mouseStarted = __touchesDevice = false,
-                pageElem = $(opts.handler, workspace).children(opts.pageHandler);
-
-            if (opts.pageshowfilter) {
-                pageElem = pageElem.filter(':visible');
-            }
+                pageElem = (opts.pageshowfilter ? handler.children(opts.pageHandler).filter('visible') : handler.children(opts.pageHandler));
 
             if (workspace.children().length>1) {
                 alert('The Selector('+workspace.attr('id')+')\'s page handler can not more than one element.');
@@ -228,14 +226,19 @@
                 }
             }
 
+            handler.unbind(".jqiphoneslide");
+            $(opts.prevPageHandler).unbind("click.jqiphoneslide", __slidePrevPage, false);
+            $(opts.nextPageHandler).unbind("click.jqiphoneslide", __slideNextPage, false);
+
             var __slideNextPage = function(event) {
-                var nowPage = parseInt(workData.nowPage), 
+                var workData = workspace.data("workData"),
+                    nowPage = parseInt(workData.nowPage), 
                     totalPages = parseInt(workData.totalPages);
 
                 nowPage++;
                 if (nowPage <= totalPages) {
                     __mouseStarted = true;
-                    var __animate = __slidingToPage(nowPage);
+                    var __animate = __slidingToPage(nowPage, 0, workspace);
                     handler.animate(__animate.after, 300, function() {
                         __mouseStarted = false;
                         __onSlideCallback(workspace);
@@ -243,19 +246,20 @@
                 } else {
                     nowPage = totalPages;
                 }               
-                workspace.data("nowPage", $.extend({}, workData, { "nowPage": nowPage }));
+                workspace.data("workData", $.extend({}, workData, { "nowPage": nowPage }));
 
                 return true;
             };
 
             var __slidePrevPage = function(event) {
-                var nowPage = parseInt(workData.nowPage), 
+                var workData = workspace.data("workData"),
+                    nowPage = parseInt(workData.nowPage), 
                     totalPages = parseInt(workData.totalPages);
 
                 nowPage--;
                 if(nowPage>0) {
                     __mouseStarted = true;
-                    var __animate = __slidingToPage(nowPage);
+                    var __animate = __slidingToPage(nowPage, 0, workspace);
                     handler.animate(__animate.after, 300, function() {
                         __mouseStarted = false;
                         __onSlideCallback(workspace);
@@ -263,7 +267,7 @@
                 } else {
                     nowPage = 1;
                 }
-                workspace.data("nowPage", $.extend({}, workData, { "nowPage": nowPage }));
+                workspace.data("workData", $.extend({}, workData, { "nowPage": nowPage }));
 
                 return true;
             };
@@ -286,9 +290,11 @@
                 dragAndDrop.origY = $(this).position().top;
 
                 if (opts.slideHandler === null || typeof opts.slideHandler !== "string") {
-                    handler.bind("mousemove touchmove", __mouseMove, false).bind("mouseleave mouseup touchend touchcancel", __mouseUp, false);
+                    handler.bind("mousemove.jqiphoneslide touchmove.jqiphoneslide", __mouseMove, false)
+                        .bind("mouseleave.jqiphoneslide mouseup.jqiphoneslide touchend.jqiphoneslide touchcancel.jqiphoneslide", __mouseUp, false);
                 } else {
-                    handler.filter(opts.slideHandler).bind("mousemove touchmove", __mouseMove, false).bind("mouseleave mouseup touchend touchcancel", __mouseUp, false);
+                    handler.filter(opts.slideHandler).bind("mousemove.jqiphoneslide touchmove.jqiphoneslide", __mouseMove, false)
+                        .bind("mouseleave.jqiphoneslide mouseup.jqiphoneslide touchend.jqiphoneslide touchcancel.jqiphoneslide", __mouseUp, false);
                 }
             };
             
@@ -336,9 +342,9 @@
                 event.preventDefault();
 
                 if (opts.slideHandler === null || typeof opts.slideHandler !== "string") {
-                    handler.unbind("mousemove touchmove", __mouseMove, false);
+                    handler.unbind("mousemove.jqiphoneslide touchmove.jqiphoneslide", __mouseMove, false);
                 } else {
-                    handler.filter(opts.slideHandler).unbind("mousemove touchmove", __mouseMove, false);
+                    handler.filter(opts.slideHandler).unbind("mousemove.jqiphoneslide touchmove.jqiphoneslide", __mouseMove, false);
                 }
 
                 var workData = $(this).parent().data("workData"),
@@ -364,14 +370,15 @@
                    ) >= parseInt(opts.sensitivity)
                 ) {
                     var timeStamp = Math.abs(moveEventData.timeStamp - startEventData.timeStamp);
-                    var thisPage = pageElem.eq(nowPage -1),
+                    var workerBounce = { "width": workspace.outerWidth(), "height": workspace.outerHeight() };
+                    var thisPage = pageElem.eq(nowPage-1),
                         thisPageSize = {
                             "width": thisPage.outerWidth(true),
                             "height": thisPage.outerHeight(true)
                         },
                         thisMove = {
-                            "X": __getMovingData(thisPageSize.width, __mouseDownEvent.pageX, __eventTouches.pageX, timeStamp),
-                            "Y": __getMovingData(thisPageSize.height, __mouseDownEvent.pageY, __eventTouches.pageY, timeStamp)
+                            "X": __getMovingData(workerBounce.width, __mouseDownEvent.pageX, __eventTouches.pageX, timeStamp),
+                            "Y": __getMovingData(workerBounce.height, __mouseDownEvent.pageY, __eventTouches.pageY, timeStamp)
                         },
                         shift = {
                             "X": 0,
@@ -384,10 +391,9 @@
                             "Y": Math.min(__eventTouches.pageY-__mouseDownEvent.pageY , thisPageSize.height)
                         },
                         pages = {
-                            "X": (Math.abs(dragAndDrop.X) >= thisPageSize.width*opts.draglaunch || Math.abs(dragAndDrop.Y) >= thisPageSize.height*opts.draglaunch) ? 0 : (timeStamp>opts.touchduring) ? 1 : Math.ceil(thisMove.X.speed*thisMove.X.shift/thisPageSize.width),
-                            "Y": (Math.abs(dragAndDrop.X) >= thisPageSize.width*opts.draglaunch || Math.abs(dragAndDrop.Y) >= thisPageSize.height*opts.draglaunch) ? 0 : (timeStamp>opts.touchduring) ? 1 : Math.ceil(thisMove.Y.speed*thisMove.Y.shift/thisPageSize.height)
+                            "X": (Math.abs(dragAndDrop.X) >= workerBounce.width*opts.draglaunch || Math.abs(dragAndDrop.Y) >= workerBounce.height*opts.draglaunch) ? 0 : (timeStamp>opts.touchduring) ? 1 : Math.ceil(thisMove.X.speed*thisMove.X.shift/thisPageSize.width),
+                            "Y": (Math.abs(dragAndDrop.X) >= workerBounce.width*opts.draglaunch || Math.abs(dragAndDrop.Y) >= workerBounce.height*opts.draglaunch) ? 0 : (timeStamp>opts.touchduring) ? 1 : Math.ceil(thisMove.Y.speed*thisMove.Y.shift/thisPageSize.height)
                         };
-
                     during = Math.min(300, opts.touchduring , Math.max(1/shift.speed*Math.abs(opts.extrashift), Math.abs(opts.extrashift)*0.5));
 
                     switch(opts.direction) {
@@ -415,13 +421,12 @@
                             pages.X = (easing.X > 0) ? (((nowPage-pages.X)<1) ? nowPage-1 : pages.X) : (((nowPage + pages.X)>totalPages) ? totalPages - nowPage : pages.X);
                             nowPage = (easing.X > 0) ? (((nowPage-pages.X)<1) ? 1 : nowPage-pages.X) : (((nowPage + pages.X)>totalPages) ? totalPages : nowPage+pages.X);
                     }
-
-                    var __animate = (opts.bounce === true) ? __slidingToPage(nowPage, easing) : __slidingToPage(nowPage, 0);
+                    var __animate = (opts.bounce === true) ? __slidingToPage(nowPage, easing, workspace) : __slidingToPage(nowPage, 0, workspace);
 
                     if (opts.bounce === true) $(this).animate(__animate.before, during);
                     $(this).animate(__animate.after, during, ($.easing[opts.easing]!==undefined ? opts.easing : "swing"), function() {
                         __mouseStarted = false;
-                        __onSlideCallback();
+                        __onSlideCallback(workspace);
                     });
                 } else {
                     $(this).animate({ 'top': dragAndDrop.origY, 'left': dragAndDrop.origX }, 50, function() {
@@ -430,9 +435,9 @@
                 }
 
                 if (opts.slideHandler === null || typeof opts.slideHandler !== "string") {
-                    $(this).unbind("mouseleave mouseup touchend", __mouseUp, false);
+                    $(this).unbind("mouseleave.jqiphoneslide mouseup.jqiphoneslide touchend.jqiphoneslide", __mouseUp, false);
                 } else {
-                    $(this).filter(opts.slideHandler).unbind("mouseleave mouseup touchend", __mouseUp, false);
+                    $(this).filter(opts.slideHandler).unbind("mouseleave.jqiphoneslide mouseup.jqiphoneslide touchend.jqiphoneslide", __mouseUp, false);
                 }
 
                 workspace.data("workData", $.extend({}, workData, { "nowPage": nowPage }));
@@ -442,8 +447,8 @@
 
             if(opts.slideHandler === null || typeof opts.slideHandler !== "string") {
                 handler
-                    .bind("mousedown touchstart", __mouseDown, false)
-                    .bind("click", function(event) {
+                    .bind("mousedown.jqiphoneslide touchstart.jqiphoneslide", __mouseDown, false)
+                    .bind("click.jqiphoneslide", function(event) {
                         if(__preventClickEvent) {
                             __preventClickEvent = false;
                             event.stopImmediatePropagation();
@@ -452,8 +457,8 @@
                     }, false);
             } else {
                 handler.filter(opts.slideHandler)
-                    .bind("mousedown touchstart", __mouseDown, false)
-                    .bind("click", function(event) {
+                    .bind("mousedown.jqiphoneslide touchstart.jqiphoneslide", __mouseDown, false)
+                    .bind("click.jqiphoneslide", function(event) {
                         if(__preventClickEvent) {
                             __preventClickEvent = false;
                             event.stopImmediatePropagation();
@@ -462,16 +467,76 @@
                     }, false);
             }
 
-            __initPages();
+            $(opts.nextPageHandler).bind("click.jqiphoneslide", __slideNextPage, false);
+            $(opts.prevPageHandler).bind("click.jqiphoneslide", __slidePrevPage, false);
+
+            __initPages(workspace);
 
             return this;
         });
-    }
+    };
 
-    $.fn.slidingToPage = function(page) {
-        var workData = $(this).data("workData");
+    $.fn.jqipblank2page = function(content, callback) {
+        var workspace = $(this), workData = $(this).data("workData"), opts = $(this).data("options"), content = $.isArray(content) ? content : [],
+            callback = (typeof callback === "function") ? callback : function() { return false; };
+
+        if (workData.initIphoneSlide && content.length > 0) {
+            var totalAddPage = content.length,
+                handler = $(opts.handler, workspace),
+                firstElem = (opts.pageshowfilter ? handler.children(opts.pageHandler).filter('visible').eq(0) : handler.children(opts.pageHandler)).eq(0);
+
+            $.each(content, function(index, html) {
+                firstElem.clone().removeAttr("style")
+                .html(html).appendTo(handler);
+
+                if(index === totalAddPage-1) {
+                    workspace.iphoneSlide(opts, callback);
+                }
+            });
+        } else {
+            alert ('Your target is not iPhone-Slide workspace.');
+            return false;
+        }
+    };
+
+    $.fn.jqipslide2page = function(page) {
+        var workspace = $(this), workData = $(this).data("workData"), opts = $(this).data("options");
         if (workData.initIphoneSlide) {
+            var page = page, __animate = {},  
+                handler = $(opts.handler, workspace), 
+                pageElem = (opts.pageshowfilter ? handler.children(opts.pageHandler).filter('visible') : handler.children(opts.pageHandler)), 
+                shift = { "X": 0, "Y": 0 }, 
+                outerWidthBoundary = workspace.width(),
+                outerHeightBoundary = workspace.height(),
+                nowPageElem = pageElem.eq(page-1);
 
+            switch(opts.direction) {
+                case "matrix":
+                    shift.X = nowPageElem.position().left;
+                    shift.X -= (outerWidthBoundary - nowPageElem.outerWidth(true))/2;
+                    shift.Y = nowPageElem.position().top;
+                    shift.Y -= (outerHeightBoundary - nowPageElem.outerHeight(true))/2;
+                    __animate = {'top': -1*shift.Y, 'left': -1*shift.X};
+                break;
+                case "vertical":
+                    shift.Y = nowPageElem.position().top;
+                    shift.Y -= (outerHeightBoundary - nowPageElem.outerHeight(true))/2;
+                    __animate = {'top': -1*shift.Y};
+                break;
+                case "horizontal":
+                default:
+                    shift.X = nowPageElem.position().left;
+                    shift.X -= (outerWidthBoundary - nowPageElem.outerWidth(true))/2;
+                    __animate = {'left': -1*shift.X};
+            }
+
+            $(handler).animate(__animate, 300, ($.easing[opts.easing]!==undefined ? opts.easing : "swing"), function() {
+                if(opts.pageshowfilter) {
+                    opts.onShiftComplete.call(workspace, $(opts.handler, workspace).children(opts.pageHandler).filter(':visible').eq(page-1), page);
+                } else {
+                    opts.onShiftComplete.call(workspace, $(opts.handler, workspace).children(opts.pageHandler).eq(page-1), page);
+                }
+            });
         } else {
             alert ('Your target is not iPhone-Slide workspace.');
             return false;

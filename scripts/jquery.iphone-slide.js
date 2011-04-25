@@ -476,13 +476,16 @@
         });
     };
 
-    $.fn.jqipblank2page = function(content, callback) {
-        var workspace = $(this), workData = $(this).data("workData"), opts = $(this).data("options"), content = $.isArray(content) ? content : [],
-            callback = (typeof callback === "function") ? callback : function() { return false; };
+    $.fn.jqipblank2page = function(content, jump2page, callback) {
+        var workspace = $(this), workData = $(this).data("workData"), opts = $(this).data("options"), 
+            content = $.isArray(content) ? content : (typeof content === "string" ? [content] : []),
+            jump2page = (typeof jump2page === "boolean") ? jump2page : false, 
+            callback = (typeof jump2page === "function") ? jump2page : (typeof callback === "function") ? callback : function() { return false; };
 
         if (workData.initIphoneSlide && content.length > 0) {
             var totalAddPage = content.length,
                 handler = $(opts.handler, workspace),
+                nowPage = (jump2page) ? workData.totalPages+1 : workData.nowPage,
                 firstElem = (opts.pageshowfilter ? handler.children(opts.pageHandler).filter('visible').eq(0) : handler.children(opts.pageHandler)).eq(0);
 
             $.each(content, function(index, html) {
@@ -490,7 +493,7 @@
                 .html(html).appendTo(handler);
 
                 if(index === totalAddPage-1) {
-                    workspace.iphoneSlide(opts, callback);
+                    workspace.iphoneSlide(opts, callback).jqipslide2page(nowPage, false);
                 }
             });
         } else {
@@ -499,16 +502,22 @@
         }
     };
 
-    $.fn.jqipslide2page = function(page) {
+    $.fn.jqipslide2page = function(page, effect) {
         var workspace = $(this), workData = $(this).data("workData"), opts = $(this).data("options");
         if (workData.initIphoneSlide) {
-            var page = page, __animate = {},  
+            var page = page, __animate = {}, effect = (typeof effect === "boolean") ? effect : true,
                 handler = $(opts.handler, workspace), 
                 pageElem = (opts.pageshowfilter ? handler.children(opts.pageHandler).filter('visible') : handler.children(opts.pageHandler)), 
                 shift = { "X": 0, "Y": 0 }, 
                 outerWidthBoundary = workspace.width(),
                 outerHeightBoundary = workspace.height(),
                 nowPageElem = pageElem.eq(page-1);
+
+            if (page <= 0 || page > workData.totalPages) {
+                return false;
+            }
+
+            workspace.data("workData", $.extend({}, workData, {"nowPage" : page }));
 
             switch(opts.direction) {
                 case "matrix":
@@ -530,13 +539,22 @@
                     __animate = {'left': -1*shift.X};
             }
 
-            $(handler).animate(__animate, 300, ($.easing[opts.easing]!==undefined ? opts.easing : "swing"), function() {
+            if(effect) {
+                $(handler).animate(__animate, 300, ($.easing[opts.easing]!==undefined ? opts.easing : "swing"), function() {
+                    if(opts.pageshowfilter) {
+                        opts.onShiftComplete.call(workspace, $(opts.handler, workspace).children(opts.pageHandler).filter(':visible').eq(page-1), page);
+                    } else {
+                        opts.onShiftComplete.call(workspace, $(opts.handler, workspace).children(opts.pageHandler).eq(page-1), page);
+                    }
+                });
+            } else {
+                $(handler).css(__animate);
                 if(opts.pageshowfilter) {
                     opts.onShiftComplete.call(workspace, $(opts.handler, workspace).children(opts.pageHandler).filter(':visible').eq(page-1), page);
                 } else {
                     opts.onShiftComplete.call(workspace, $(opts.handler, workspace).children(opts.pageHandler).eq(page-1), page);
                 }
-            });
+            }
         } else {
             alert ('Your target is not iPhone-Slide workspace.');
             return false;

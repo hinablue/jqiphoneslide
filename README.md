@@ -1,3 +1,15 @@
+# UPDATE, v0.54. #
+
+Add slide2page and blank2page. You can use ".jqipslide2page" to sliding the box to page, ".jqipblank2page" to add HTML-Code page in the box. See the demo.html for more detail.
+
+# UPDATE, v0.53. #
+
+Modified/Fixed next/prev page handler.
+
+# UPDATE, v0.52. #
+
+Fixed some event issue usr Namespace.
+
 # UPDATE, v0.51. #
 
 Add new setting "bounce" that you can turn on/off the default animate bounce effect.

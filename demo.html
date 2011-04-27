@@ -27,10 +27,21 @@ $(document).ready(function() {
 	SyntaxHighlighter.config.clipboardSwf = './syntaxhighlighter/scripts/clipboard.swf';
 	SyntaxHighlighter.all();
 
-	$('#album, #album4, #album5').iphoneSlide({
+	$('#album, #album5').iphoneSlide({
 		handler: ".paging",
-		pageHandler: ".page"
+		pageHandler: ".page",
+        onShiftComplete: function(elem, page) {
+        }
 	});
+
+    $('#album4').iphoneSlide({
+		handler: ".paging",
+		pageHandler: ".page",
+        nextPageHandler: "#nextPage",
+        prevPageHandler: "#prevPage",
+        onShiftComplete: function(elem, page) {
+        }
+    });
 	
 	$('#album2').iphoneSlide({
 		handler: ".paging",
@@ -49,8 +60,10 @@ $(document).ready(function() {
 		handler: ".paging",
 		pageHandler: ".page",
 		onShiftComplete: function(elem, page) {
-			var centerPage = 4, handler = $(elem).parent(), ahead, behind;
-			
+			var centerPage = 4, handler = $(elem).parent(), 
+                workspace = handler.parent(), ahead, behind,
+                workData = workspace.data("workData");
+
 			if(page!=centerPage) {
 				for(var i=1; i<=Math.abs(centerPage-page); i++) {
 					ahead = handler.children(':first');
@@ -62,19 +75,10 @@ $(document).ready(function() {
 						behind.after(ahead);
 					}
 				}
-				handler.css( 'left' , $(this).width()*(1-centerPage));
-				$(this).data('nowPage', centerPage);
+                var __shift = ($(elem).width() + (workspace.outerWidth() - $(elem).width())/2+1)*(1-centerPage);
+				handler.css('left', __shift);
+                workspace.data("workData", $.extend({}, workData, {'nowPage': centerPage}));
 			}
-		}
-	}, function() {
-		var page = $(this).data('nowPage'), centerPage = 4, totalPages = $(this).data('totalPages'), handler = $(".paging", $(this)), ahead, behind;
-		if(page != centerPage) {
-			ahead = handler.children(':first');
-			behind = handler.children().eq(totalPages-Math.abs(centerPage-page)-1).nextAll();
-			ahead.before(behind);
-			
-			handler.css( 'left' , $(this).width()*(1-centerPage));
-			$(this).data('nowPage', centerPage);
 		}
 	});
 	$('#album7').iphoneSlide({
@@ -84,17 +88,17 @@ $(document).ready(function() {
 		easing: "easeOutBounce"
 	});
     $('#slidetopage4').click(function() {
-        $('#album4').jqipslide2page(3, false);
+        $('#album4').iphoneSlide('jqipslide2page', 3, false);
     });
     $('#addpages').click(function() {
-        $('#album5').jqipblank2page(["blank page","blank page","blank page"]);
+        $('#album5').iphoneSlide('jqipblank2page', ["blank page","blank page","blank page"]);
     });
 });
 //]]>
 </script>
 <body>
 <div id="container">
-	<h1>jQuery Simple iPhone-Slide plugin v0.54</h1>
+	<h1>jQuery Simple iPhone-Slide plugin v0.55</h1>
 
     <h2>UPDATE 2011/04/25, fixed some issue use namespace, and you can add blank page (BUT no demo :-P).</h2>
     <h2>UPDATE 2011/04/19, you can turn on/off default animate effect within "bounce".</h2>
@@ -297,7 +301,8 @@ var pagesOuterHeight = parseInt(workspaceData.pagesOuterHeight);</pre>
 	</div>
 	<h2>HOWTO - Slide to page</h2>
     <pre class="brush: js">
-$('#album').jqipslide2page(
+$('#album').iphoneSlide(
+    'jqipslide2page',
     3, // Slide to page,
     true // Sliding animate, default: true
 );</pre>
@@ -317,20 +322,25 @@ $('#album').jqipslide2page(
 				<div class="page single" style="background-image: url(./images/16.jpg);"></div>
 			</div>
 		</div>
-		<div class="button"><button id="slidetopage4">Slide to page 3</button></div>
+		<div class="button">
+            <button id="prevPage">Prev</button>
+            <button id="slidetopage4">Slide to page 3</button>
+            <button id="nextPage">Next</button>
+        </div>
 	</div>
 	
 	<h2>HOWTO - dynamic add pages</h2>
     <pre class="brush: js">
-$('#album').jqipblank2page(
+$('#album').iphoneSlide(
+    'jqipblank2page',
     "blank page", // Your page.
     true, // Jump to your page.
     function() { return false; } // Callback function.
 );
 // Singal page.
-$('#album').jqipblank2page("blank page");
+$('#album').iphoneSlide('jqipblank2page',"blank page");
 // Multi pages.
-$('#album').jqipblank2page(["blank page 1", "blank page 2"]);</pre>
+$('#album').iphoneSlide('jqipblank2page', ["blank page 1", "blank page 2"]);</pre>
 	<h2>DEMO, add 3 blank pages</h2>
 	<div id="album5" class="album">
 		<div class="paging">
@@ -352,39 +362,29 @@ $('#album').jqipblank2page(["blank page 1", "blank page 2"]);</pre>
 	maxShiftPage : 4,
 	handler: ".paging",
 	pageHandler: ".page",
-	onShiftComplete: 
-		function(elem, page) {
-			var centerPage = 4, handler = $(elem).parent(), ahead, behind;
-			
-			if(page!=centerPage) {
-				for(var i=1; i<=Math.abs(centerPage-page); i++) {
-					ahead = handler.children(':first');
-					behind = handler.children(':last');
-					
-					if(centerPage-page>0) {
-						ahead.before(behind);
-					} else if(centerPage-page<0) {
-						behind.after(ahead);
-					}
-				}
-				handler.css( 'left' , $(this).width()*(1-centerPage));
-				$(this).data('nowPage', centerPage);
-			}
-		}
-	}, function() {
-		var page = $(this).data('nowPage'), centerPage = 4,
-			totalPages = $(this).data('totalPages'), 
-			handler = $(".paging", $(this)), ahead, behind;
-			
-		if(page != centerPage) {
-			ahead = handler.children(':first');
-			behind = handler.children().eq(totalPages-Math.abs(centerPage-page)-1).nextAll();
-			ahead.before(behind);
-			
-			handler.css( 'left' , $(this).width()*(1-centerPage));
-			$(this).data('nowPage', centerPage);
-		}
-	});</pre>
+ 	onShiftComplete: function(elem, page) {
+        var centerPage = 4, handler = $(elem).parent(), 
+            workspace = handler.parent(), ahead, behind,
+            workData = workspace.data("workData");
+
+        if(page!=centerPage) {
+            for(var i=1; i&lt;=Math.abs(centerPage-page); i++) {
+                ahead = handler.children(':first');
+                behind = handler.children(':last');
+                
+                if(centerPage-page&gt;0) {
+                    ahead.before(behind);
+                } else if(centerPage-page<0) {
+                    behind.after(ahead);
+                }
+            }
+            var __shift = ($(elem).width() + (workspace.outerWidth() - $(elem).width())/2+1)*(1-centerPage);
+            handler.css('left', __shift);
+            workspace.data("workData", $.extend({}, workData, {'nowPage': centerPage}));
+        }
+    }
+});
+</pre>
 	
 	<h2>DEMO, infinite sliding pages</h2>
 	<div id="album6" class="album">

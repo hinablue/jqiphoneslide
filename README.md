@@ -1,3 +1,7 @@
+# UPDATE, v0.55. #
+
+Modified method. ".jqipslide2page" to .iphoneSlide("jqipslide2page", args), ".jqipblank2page" to .iphoneSlide("jqipblank2page", args), see the demo.html for more detail.
+
 # UPDATE, v0.54. #
 
 Add slide2page and blank2page. You can use ".jqipslide2page" to sliding the box to page, ".jqipblank2page" to add HTML-Code page in the box. See the demo.html for more detail.

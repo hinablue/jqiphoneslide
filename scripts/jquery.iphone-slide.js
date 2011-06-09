@@ -150,7 +150,7 @@
                         if (nowPage <= totalPages) {
                             __mouseStarted = true;
                             var __animate = helpers.slide_to_page.call(workspace, nowPage, 0);
-                            handler.animate(__animate.after, 300, function() {
+                            handler.animate(__animate.after, 300, ((opts.bounce && $.easing[opts.easing]!==undefined) ? opts.easing : "swing"), function() {
                                 __mouseStarted = false;
                                 helpers.slide_callback.call(this);
                             });
@@ -171,7 +171,7 @@
                         if(nowPage>0) {
                             __mouseStarted = true;
                             var __animate = helpers.slide_to_page.call(workspace, nowPage, 0);
-                            handler.animate(__animate.after, 300, function() {
+                            handler.animate(__animate.after, 300, ((opts.bounce && $.easing[opts.easing]!==undefined) ? opts.easing : "swing"), function() {
                                 __mouseStarted = false;
                                 helpers.slide_callback.call(this);
                             });
@@ -385,7 +385,7 @@
 
                     return this;
                 });
-            },
+            }
         };
 
         var helpers = {
@@ -547,7 +547,7 @@
                         };
                 }
                 return __animate;
-            },
+            }
         };
 
         if (methods[method] && method.toLowerCase() != 'init') {

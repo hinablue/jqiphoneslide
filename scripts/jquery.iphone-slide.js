@@ -1,6 +1,6 @@
 /**
  * iphoneSlide - jQuery plugin
- * @version: 0.55 (2011/04/27)
+ * @version: 0.56 (2011/07/07)
  * @requires jQuery v1.4+
  * @author Hina, Cain Chen. hinablue [at] gmail [dot] com
  * Examples and documentation at: http://jquery.hinablue.me/jqiphoneslide
@@ -280,6 +280,9 @@
                             Math.abs(__mouseDownEvent.pageY - __eventTouches.pageY)
                            ) >= parseInt(opts.sensitivity)
                         ) {
+                            // Force cancle click event when drag.
+                            __preventClickEvent = false;
+
                             var timeStamp = Math.abs(moveEventData.timeStamp - startEventData.timeStamp);
                             var workerBounce = { "width": workspace.outerWidth(), "height": workspace.outerHeight() };
                             var thisPage = pageElem.eq(nowPage-1),
@@ -356,26 +359,25 @@
                         return !__mouseStarted;
                     };
 
+                    var __click = function(event) {
+                        if(__preventClickEvent) {
+                            __preventClickEvent = false;
+                            event.stopImmediatePropagation();
+
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    };
+
                     if(opts.slideHandler === null || typeof opts.slideHandler !== "string") {
                         handler
                             .bind("mousedown.jqiphoneslide touchstart.jqiphoneslide", __mouseDown, false)
-                            .bind("click.jqiphoneslide", function(event) {
-                                if(__preventClickEvent) {
-                                    __preventClickEvent = false;
-                                    event.stopImmediatePropagation();
-                                    return false;
-                                }
-                            }, false);
+                            .bind("click.jqiphoneslide", __click, false);
                     } else {
                         handler.filter(opts.slideHandler)
                             .bind("mousedown.jqiphoneslide touchstart.jqiphoneslide", __mouseDown, false)
-                            .bind("click.jqiphoneslide", function(event) {
-                                if(__preventClickEvent) {
-                                    __preventClickEvent = false;
-                                    event.stopImmediatePropagation();
-                                    return false;
-                                }
-                            }, false);
+                            .bind("click.jqiphoneslide", __click, false);
                     }
 
                     $(opts.nextPageHandler).bind("click.jqiphoneslide", __slideNextPage, false);
@@ -500,9 +502,9 @@
                     handler = $(opts.handler, workspace).children(opts.pageHandler);
 
                 if(opts.pageshowfilter) {
-                    opts.onShiftComplete.call(null, handler.filter(':visible').eq(nowPage-1), nowPage);
+                    opts.onShiftComplete.call(workspace, handler.filter(':visible').eq(nowPage-1), nowPage);
                 } else {
-                    opts.onShiftComplete.call(null, handler.eq(nowPage-1), nowPage);
+                    opts.onShiftComplete.call(workspace, handler.eq(nowPage-1), nowPage);
                 }
             },
 

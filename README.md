@@ -1,3 +1,7 @@
+# UPDATE, v0.56. #
+
+Fixed/Modified click event. When click and no drag action that will fire click event and return true for it. So, you can use a tag in the pages.
+
 # UPDATE, v0.55. #
 
 Modified method. ".jqipslide2page" to .iphoneSlide("jqipslide2page", args), ".jqipblank2page" to .iphoneSlide("jqipblank2page", args), see the demo.html for more detail.

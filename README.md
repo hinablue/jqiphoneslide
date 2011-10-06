@@ -1,3 +1,7 @@
+# UPDATE, v0.6 #
+
+Fixed all events to work fine on jQuery 1.4+ ~ 1.7pre. Also I known the iPad/iPhone issue (maybe other mobile devices), but I have no device to test :-P.
+
 # UPDATE, v0.56. #
 
 Fixed/Modified click event. When click and no drag action that will fire click event and return true for it. So, you can use a tag in the pages.

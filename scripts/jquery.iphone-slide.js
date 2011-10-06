@@ -1,6 +1,6 @@
 /**
  * iphoneSlide - jQuery plugin
- * @version: 0.56 (2011/07/07)
+ * @version: 0.6 (2011/10/06)
  * @requires jQuery v1.4+
  * @author Hina, Cain Chen. hinablue [at] gmail [dot] com
  * Examples and documentation at: http://jquery.hinablue.me/jqiphoneslide
@@ -105,12 +105,11 @@
                     var workspace = $(this), workData = workspace.data("workData"), 
                         handler = $(opts.handler, workspace), 
                         dragAndDrop = $.extend({}, { origX:0, origY:0, X:0, Y:0 }), 
-                        startEventData, moveEventData, 
+                        startEventData, moveEventData,
                         totalPages = matrixRow = matrixColumn = 0,
                         nowPage = 1,
                         __preventClickEvent = __mouseStarted = __touchesDevice = false,
                         pageElem = (opts.pageshowfilter ? handler.children(opts.pageHandler).filter('visible') : handler.children(opts.pageHandler));
-
                     if (workspace.children().length>1) {
                         alert('The Selector('+workspace.attr('id')+')\'s page handler can not more than one element.');
                         return this;
@@ -135,9 +134,11 @@
                             default:
                                 opts.pageHandler = handler.children(':first').attr('tagName').toLowerCase();
                         }
+                        workspace.undelegate(opts.handler, ".jqiphoneslide");
+                    } else {
+                        workspace.undelegate(opts.pageHandler, ".jqiphoneslide");
                     }
 
-                    handler.unbind(".jqiphoneslide");
                     $(opts.prevPageHandler).unbind("click.jqiphoneslide", __slidePrevPage, false);
                     $(opts.nextPageHandler).unbind("click.jqiphoneslide", __slideNextPage, false);
 
@@ -193,20 +194,32 @@
                         var __touches = event.originalEvent.touches || event.originalEvent.targetTouches || event.originalEvent.changedTouches,
                             __startEvent =  __touches === undefined ? event : __touches[0];
 
-                        startEventData = $.extend({}, __startEvent, { timeStamp: event.timeStamp });
+                        startEventData = moveEventData = $.extend({}, __startEvent, { timeStamp: event.timeStamp });
 
                         if (__touches !== undefined) __touchesDevice = true;
 
-                        dragAndDrop.origX = $(this).position().left;
-                        dragAndDrop.origY = $(this).position().top;
+                        dragAndDrop.origX = dragAndDrop.X = handler.position().left;
+                        dragAndDrop.origY = dragAndDrop.Y = handler.position().top;
 
                         if (opts.slideHandler === null || typeof opts.slideHandler !== "string") {
-                            handler.bind("mousemove.jqiphoneslide touchmove.jqiphoneslide", __mouseMove, false)
-                                .bind("mouseleave.jqiphoneslide mouseup.jqiphoneslide touchend.jqiphoneslide touchcancel.jqiphoneslide", __mouseUp, false);
+                            if (__touches) {
+                                workspace.delegate(opts.handler, "touchmove.jqiphoneslide", __mouseMove)
+                                .delegate(opts.handler, "touchend.jqiphoneslide touchcancel.jqiphoneslide MozTouchUp.jqiphoneslide", __mouseUp);
+                            } else {
+                                workspace.delegate(opts.handler, "mousemove.jqiphoneslide", __mouseMove)
+                                .delegate(opts.handler, "mouseleave.jqiphoneslide mouseup.jqiphoneslide", __mouseUp);
+                            }
                         } else {
-                            handler.filter(opts.slideHandler).bind("mousemove.jqiphoneslide touchmove.jqiphoneslide", __mouseMove, false)
-                                .bind("mouseleave.jqiphoneslide mouseup.jqiphoneslide touchend.jqiphoneslide touchcancel.jqiphoneslide", __mouseUp, false);
+                            if (__touches) {
+                                workspace.delegate(opts.slideHandler,"touchmove.jqiphoneslide", __mouseMove)
+                                .delegate(opts.slideHandler, "touchend.jqiphoneslide touchcancel.jqiphoneslide MozTouchUp.jqiphoneslide", __mouseUp);
+                            } else {
+                                workspace.delegate(opts.slideHandler, "mousemove.jqiphoneslide", __mouseMove)
+                                .delegate(pts.slideHandler, "mouseleave.jqiphoneslide mouseup.jqiphoneslide", __mouseUp);
+                            }
                         }
+
+                        return !__mouseStarted;
                     };
                     
                     var __mouseMove = function(event) {
@@ -248,14 +261,19 @@
                         return !__mouseStarted;
                     };
 
-                    var __mouseUp = function(event) {
+                    var __click = function(event) {
+                        event.preventDefault();
 
+                        return __preventClickEvent;
+                    };
+
+                    var __mouseUp = function(event) {
                         event.preventDefault();
 
                         if (opts.slideHandler === null || typeof opts.slideHandler !== "string") {
-                            handler.unbind("mousemove.jqiphoneslide touchmove.jqiphoneslide", __mouseMove, false);
+                            workspace.undelegate(opts.handler, "mousemove.jqiphoneslide touchmove.jqiphoneslide MozTouchMove.jqiphoneslide");
                         } else {
-                            handler.filter(opts.slideHandler).unbind("mousemove.jqiphoneslide touchmove.jqiphoneslide", __mouseMove, false);
+                            workspace.undelegate(opts.slideHandler,"mousemove.jqiphoneslide touchmove.jqiphoneslide MozTouchMove.jqiphoneslide");
                         }
 
                         var workData = $(this).parent().data("workData"),
@@ -280,7 +298,7 @@
                             Math.abs(__mouseDownEvent.pageY - __eventTouches.pageY)
                            ) >= parseInt(opts.sensitivity)
                         ) {
-                            // Force cancle click event when drag.
+                            // Force cancel click event when drag.
                             __preventClickEvent = false;
 
                             var timeStamp = Math.abs(moveEventData.timeStamp - startEventData.timeStamp);
@@ -337,21 +355,21 @@
                             }
                             var __animate = (opts.bounce === true) ? helpers.slide_to_page.call(this, nowPage, easing) : helpers.slide_to_page.call(this, nowPage, 0);
 
-                            if (opts.bounce === true) $(this).animate(__animate.before, during);
-                            $(this).animate(__animate.after, during, ($.easing[opts.easing]!==undefined ? opts.easing : "swing"), function() {
+                            if (opts.bounce === true) handler.animate(__animate.before, during);
+                            handler.animate(__animate.after, during, ($.easing[opts.easing]!==undefined ? opts.easing : "swing"), function() {
                                 __mouseStarted = false;
                                 helpers.slide_callback.call(this);
                             });
                         } else {
-                            $(this).animate({ 'top': dragAndDrop.origY, 'left': dragAndDrop.origX }, 50, function() {
-                                __mouseStarted = false;
-                            });
+                            handler.css({ 'top': dragAndDrop.origY, 'left': dragAndDrop.origX });
+                            handler.trigger("click.jqiphoneslide");
+                            __mouseStarted = false;
                         }
 
                         if (opts.slideHandler === null || typeof opts.slideHandler !== "string") {
-                            $(this).unbind("mouseleave.jqiphoneslide mouseup.jqiphoneslide touchend.jqiphoneslide", __mouseUp, false);
+                            workspace.undelegate(opts.handler,"mouseleave.jqiphoneslide mouseup.jqiphoneslide touchend.jqiphoneslide touchcancel.jqiphoneslide MozTouchUp.jqiphoneslide", __mouseUp);
                         } else {
-                            $(this).filter(opts.slideHandler).unbind("mouseleave.jqiphoneslide mouseup.jqiphoneslide touchend.jqiphoneslide", __mouseUp, false);
+                            workspace.undelegate(opts.slideHandler, "mouseleave.jqiphoneslide mouseup.jqiphoneslide touchend.jqiphoneslide touchcancel.jqiphoneslide MozTouchUp.jqiphoneslide", __mouseUp);
                         }
 
                         workspace.data("workData", $.extend({}, workData, { "nowPage": nowPage }));
@@ -359,25 +377,17 @@
                         return !__mouseStarted;
                     };
 
-                    var __click = function(event) {
-                        if(__preventClickEvent) {
-                            __preventClickEvent = false;
-                            event.stopImmediatePropagation();
-
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    };
-
                     if(opts.slideHandler === null || typeof opts.slideHandler !== "string") {
-                        handler
-                            .bind("mousedown.jqiphoneslide touchstart.jqiphoneslide", __mouseDown, false)
-                            .bind("click.jqiphoneslide", __click, false);
+                        handler.delegate('a, button, input[type=button], input[type=reset], input[type=submit]', 'touchstart.jqiphoneslide click.jqiphoneslide', __click);
+
+                        workspace.delegate(opts.handler, "mousedown.jqiphoneslide touchstart.jqiphoneslide MozTouchDown.jqiphoneslide", __mouseDown);
+                        //.bind("click.jqiphoneslide", __click, false);
                     } else {
                         handler.filter(opts.slideHandler)
-                            .bind("mousedown.jqiphoneslide touchstart.jqiphoneslide", __mouseDown, false)
-                            .bind("click.jqiphoneslide", __click, false);
+                        .delegate('a, button, input[type=button], input[type=reset], input[type=submit]', 'touchstart.jqiphoneslide click.jqiphoneslide', __click);
+
+                        workspace.delegate(opts.slideHandler, "mousedown.jqiphoneslide touchstart.jqiphoneslide MozTouchDown.jqiphoneslide", __mouseDown);
+                        //.bind("click.jqiphoneslide", __click, false);
                     }
 
                     $(opts.nextPageHandler).bind("click.jqiphoneslide", __slideNextPage, false);
@@ -393,6 +403,11 @@
         var helpers = {
             options: null,
             callback: function() { return this; },
+            logs: function(logs) {
+                var t = new Date(), log = $('#log');
+                log.html(t.toUTCString()+': '+logs+'<br />'+log.html());
+                return true;
+            },
             get_moving_data: function(w, s, e, t) {
                 var v = 0, ex = 0, w = w*1, s = s*1, e = e*1, t = t*1, opts = helpers.options;
 

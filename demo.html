@@ -10,106 +10,15 @@
 
 <link type="text/css" rel="stylesheet" href="./syntaxhighlighter/styles/shCore.css"/>
 <link type="text/css" rel="stylesheet" href="./syntaxhighlighter/styles/shThemeFadeToGrey.css"/>
-
-<script type="text/javascript" src="./syntaxhighlighter/scripts/shCore.js"></script>
-<script type="text/javascript" src="./syntaxhighlighter/scripts/shBrushCss.js"></script>
-<script type="text/javascript" src="./syntaxhighlighter/scripts/shBrushJScript.js"></script>
-<script type="text/javascript" src="./syntaxhighlighter/scripts/shBrushPlain.js"></script>
-<script type="text/javascript" src="./syntaxhighlighter/scripts/shBrushXml.js"></script>
-<script type="text/javascript" src="./scripts/jquery-1.4.2.min.js"></script>
-<script type="text/javascript" src="./scripts/jquery.easing.1.3.min.js"></script>
-<script type="text/javascript" src="./scripts/jquery.iphone-slide.js"></script>
 </head>
-
-<script type="text/javascript">
-//<![CDDA[
-$(document).ready(function() {
-	SyntaxHighlighter.config.clipboardSwf = './syntaxhighlighter/scripts/clipboard.swf';
-	SyntaxHighlighter.all();
-
-	$('#album, #album5').iphoneSlide({
-		handler: ".paging",
-		pageHandler: ".page",
-        onShiftComplete: function(elem, page) {
-        }
-	});
-
-    $('#album4').iphoneSlide({
-		handler: ".paging",
-		pageHandler: ".page",
-        nextPageHandler: "#nextPage",
-        prevPageHandler: "#prevPage",
-        easing: "easeOutBounce",
-        onShiftComplete: function(elem, page) {
-        }
-    });
-	
-	$('#album2').iphoneSlide({
-		handler: ".paging",
-		pageHandler: ".page",
-		direction: "matrix"
-	});
-	
-	$('#album3').iphoneSlide({
-		handler: ".paging",
-		pageHandler: ".page",
-		direction: "vertical"
-	});
-
-	$('#album6').iphoneSlide({
-		maxShiftPage : 4,
-		handler: ".paging",
-		pageHandler: ".page",
-		onShiftComplete: function(elem, page) {
-			var centerPage = 4, handler = $(elem).parent(), 
-                workspace = handler.parent(), ahead, behind,
-                workData = workspace.data("workData");
-
-			if(page!=centerPage) {
-				for(var i=1; i<=Math.abs(centerPage-page); i++) {
-					ahead = handler.children(':first');
-					behind = handler.children(':last');
-					
-					if(centerPage-page>0) {
-						ahead.before(behind);
-					} else if(centerPage-page<0) {
-						behind.after(ahead);
-					}
-				}
-                var __shift = ($(elem).width() + (workspace.outerWidth() - $(elem).width())/2+1)*(1-centerPage);
-				handler.css('left', __shift);
-                workspace.data("workData", $.extend({}, workData, {'nowPage': centerPage}));
-			}
-		}
-	});
-	$('#album7').iphoneSlide({
-		handler: ".paging",
-		pageHandler: ".page",
-		direction: "matrix",
-		easing: "easeOutBounce"
-	});
-    $('#slidetopage4').click(function() {
-        $('#album4').iphoneSlide('jqipslide2page', 3, false);
-    });
-    $('#addpages').click(function() {
-        $('#album5').iphoneSlide('jqipblank2page', ["blank page","blank page","blank page"]);
-    });
-});
-//]]>
-</script>
 <body>
 <div id="container">
-	<h1>jQuery Simple iPhone-Slide plugin v0.55</h1>
+	<h1>jQuery Simple iPhone-Slide plugin</h1>
 
-    <h2>UPDATE 2011/04/25, fixed some issue use namespace, and you can add blank page (BUT no demo :-P).</h2>
-    <h2>UPDATE 2011/04/19, you can turn on/off default animate effect within "bounce".</h2>
-    <h2>UPDATE 2011/03/14, support Mobile device touch events, tested on iPhone4.</h2>
     <h2>Needed - jQuery 1.4+</h2>
 	<div>
 		<blockquote>
-			<a href="./scripts/jquery.iphone-slide.js">jquery.iphone-slide.js</a> ( 23.6KB)<br />
-			<a href="./scripts/jquery.iphone.slide.min.js">jquery.iphone-slide.min.js</a> ( 9.8KB)<br />
-			<a href="./scripts/jquery.easing.1.3.min.js">jquery.easing.1.3.min.js</a> ( 5.4KB), via <a href="http://gsgd.co.uk/sandbox/jquery/easing/">http://gsgd.co.uk/sandbox/jquery/easing/</a><br />
+            <span>Check it out in the <a href="https://github.com/hinablue/jqiphoneslide" style="color: #ff3333;">gitHub</a>.</span>
 		</blockquote>
 	</div>
 
@@ -430,6 +339,92 @@ $('#album').iphoneSlide('jqipblank2page', ["blank page 1", "blank page 2"]);</pr
 
     <h2>Do more you can!</h2>
 </div>
+<script type="text/javascript" src="./syntaxhighlighter/scripts/shCore.js"></script>
+<script type="text/javascript" src="./syntaxhighlighter/scripts/shBrushCss.js"></script>
+<script type="text/javascript" src="./syntaxhighlighter/scripts/shBrushJScript.js"></script>
+<script type="text/javascript" src="./syntaxhighlighter/scripts/shBrushPlain.js"></script>
+<script type="text/javascript" src="./syntaxhighlighter/scripts/shBrushXml.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+<script type="text/javascript" src="./scripts/jquery.easing.1.3.min.js"></script>
+<script type="text/javascript" src="./scripts/jquery.iphone-slide.js"></script>
+</head>
+
+<script type="text/javascript">
+//<![CDDA[
+$(document).ready(function() {
+	SyntaxHighlighter.config.clipboardSwf = './syntaxhighlighter/scripts/clipboard.swf';
+	SyntaxHighlighter.all();
+
+	$('#album, #album5').iphoneSlide({
+		handler: ".paging",
+		pageHandler: ".page",
+        onShiftComplete: function(elem, page) {
+        }
+	});
+
+    $('#album4').iphoneSlide({
+		handler: ".paging",
+		pageHandler: ".page",
+        nextPageHandler: "#nextPage",
+        prevPageHandler: "#prevPage",
+        easing: "easeOutBounce",
+        onShiftComplete: function(elem, page) {
+        }
+    });
+	
+	$('#album2').iphoneSlide({
+		handler: ".paging",
+		pageHandler: ".page",
+		direction: "matrix"
+	});
+	
+	$('#album3').iphoneSlide({
+		handler: ".paging",
+		pageHandler: ".page",
+		direction: "vertical"
+	});
+
+	$('#album6').iphoneSlide({
+		maxShiftPage : 4,
+		handler: ".paging",
+		pageHandler: ".page",
+		onShiftComplete: function(elem, page) {
+			var centerPage = 4, handler = $(elem).parent(), 
+                workspace = handler.parent(), ahead, behind,
+                workData = workspace.data("workData");
+
+			if(page!=centerPage) {
+				for(var i=1; i<=Math.abs(centerPage-page); i++) {
+					ahead = handler.children(':first');
+					behind = handler.children(':last');
+					
+					if(centerPage-page>0) {
+						ahead.before(behind);
+					} else if(centerPage-page<0) {
+						behind.after(ahead);
+					}
+				}
+                var __shift = ($(elem).width() + (workspace.outerWidth() - $(elem).width())/2+1)*(1-centerPage);
+				handler.css('left', __shift);
+                workspace.data("workData", $.extend({}, workData, {'nowPage': centerPage}));
+			}
+		}
+	});
+	$('#album7').iphoneSlide({
+		handler: ".paging",
+		pageHandler: ".page",
+		direction: "matrix",
+		easing: "easeOutBounce"
+	});
+    $('#slidetopage4').click(function() {
+        $('#album4').iphoneSlide('jqipslide2page', 3, false);
+    });
+    $('#addpages').click(function() {
+        $('#album5').iphoneSlide('jqipblank2page', ["blank page","blank page","blank page"]);
+    });
+});
+//]]>
+</script>
 
 </body> 
 </html>

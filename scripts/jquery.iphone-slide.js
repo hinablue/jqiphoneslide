@@ -1,8 +1,9 @@
 /**
  * iphoneSlide - jQuery plugin
- * @version: 0.6 (2011/10/06)
+ * @version: 0.7 (2011/10/27)
  * @requires jQuery v1.4+
  * @author Hina, Cain Chen. hinablue [at] gmail [dot] com
+ * @modified by: Adam Chow adamchow2326@yahoo.com.au
  * Examples and documentation at: http://jquery.hinablue.me/jqiphoneslide
  * 
  * Dual licensed under the MIT and GPL licenses:
@@ -11,7 +12,6 @@
  **/
 
 (function($) {
-
     $.fn.iphoneSlide = function(method) {
         var defaults = {
             handler: null,
@@ -29,13 +29,22 @@
             easing: "swing",
             bounce: true,
             pageshowfilter : false,
+			autoPlay: true,
+			cancelAutoPlayOnResize: true,
+			pager: {
+				pagerType: "dot",
+				cssName: "banner_pager",
+				slideToAnimated: true
+			},
+			autoPlayTime: 3000,
             onShiftComplete : function() {}
         };
 
         var settings = {};
 
         var methods = {
-            jqipslide2page: function(page, effect) {
+			pluginWorkspace: "test",
+            jqipslide2page: function(page, effect) {				
                 var workspace = $(this), workData = $(this).data("workData"), opts = $(this).data("options");
                 if (workData.initIphoneSlide) {
                     var page = page, __animate = {}, effect = (typeof effect === "boolean") ? effect : true,
@@ -45,11 +54,9 @@
                         outerWidthBoundary = workspace.width(),
                         outerHeightBoundary = workspace.height(),
                         nowPageElem = pageElem.eq(page-1);
-
                     if (page <= 0 || page > workData.totalPages) {
                         return false;
                     }
-
                     workspace.data("workData", $.extend({}, workData, {"nowPage" : page }));
 
                     var __animate = helpers.slide_to_page.call(this, page);
@@ -73,13 +80,11 @@
                     content = $.isArray(content) ? content : (typeof content === "string" ? [content] : []),
                     jump2page = (typeof jump2page === "boolean") ? jump2page : false, 
                     callback = (typeof jump2page === "function") ? jump2page : (typeof callback === "function") ? callback : function() { return false; };
-
                 if (workData.initIphoneSlide && content.length > 0) {
                     var totalAddPage = content.length,
                         handler = $(opts.handler, workspace),
                         nowPage = (jump2page) ? workData.totalPages+1 : workData.nowPage,
                         firstElem = (opts.pageshowfilter ? handler.children(opts.pageHandler).filter('visible').eq(0) : handler.children(opts.pageHandler)).eq(0);
-
                     $.each(content, function(index, html) {
                         firstElem.clone().removeAttr("style")
                         .html(html).appendTo(handler);
@@ -96,22 +101,23 @@
 
             init: function(options, callback) {
                 var opts = $.extend({}, defaults, options),
+					autoPlayTimer = null,
                     callback = (typeof callback === "function") ? callback : function() { return this; };
-
+				
                 helpers.options = opts;
                 helpers.callback = callback;
 
                 return $(this).each(function() {
-                    var workspace = $(this), workData = workspace.data("workData"), 
+					var workspace = $(this), workData = workspace.data("workData"), 
                         handler = $(opts.handler, workspace), 
                         dragAndDrop = $.extend({}, { origX:0, origY:0, X:0, Y:0 }), 
                         startEventData, moveEventData,
                         totalPages = matrixRow = matrixColumn = 0,
-                        nowPage = 1,
                         __preventClickEvent = __mouseStarted = __touchesDevice = false,
                         pageElem = (opts.pageshowfilter ? handler.children(opts.pageHandler).filter('visible') : handler.children(opts.pageHandler));
+
                     if (workspace.children().length>1) {
-                        alert('The Selector('+workspace.attr('id')+')\'s page handler can not more than one element.');
+                        alert('The Selector('+workspace.attr('id')+')\'s page handler can not be more than one element.');
                         return this;
                     }
 
@@ -141,56 +147,65 @@
 
                     $(opts.prevPageHandler).unbind("click.jqiphoneslide", __slidePrevPage, false);
                     $(opts.nextPageHandler).unbind("click.jqiphoneslide", __slideNextPage, false);
+					
+					// bind custome "slideComplete event"
+					workspace.bind("slideComplete", function(e) {
+					  updatePagerNav();
+					});
 
                     var __slideNextPage = function(event) {
                         var workData = workspace.data("workData"),
                             nowPage = parseInt(workData.nowPage), 
                             totalPages = parseInt(workData.totalPages);
-
                         nowPage++;
                         if (nowPage <= totalPages) {
                             __mouseStarted = true;
                             var __animate = helpers.slide_to_page.call(workspace, nowPage, 0);
                             handler.animate(__animate.after, 300, ((opts.bounce && $.easing[opts.easing]!==undefined) ? opts.easing : "swing"), function() {
                                 __mouseStarted = false;
-                                helpers.slide_callback.call(this);
+								workspace.trigger({
+									type:"slideComplete"
+								});
+								helpers.slide_callback.call(this);
                             });
                         } else {
-                            nowPage = totalPages;
+                            nowPage = totalPages;	
                         }               
                         workspace.data("workData", $.extend({}, workData, { "nowPage": nowPage }));
-
+						updatePagerNav();
                         return true;
                     };
-
+					
                     var __slidePrevPage = function(event) {
                         var workData = workspace.data("workData"),
                             nowPage = parseInt(workData.nowPage), 
                             totalPages = parseInt(workData.totalPages);
-
                         nowPage--;
                         if(nowPage>0) {
                             __mouseStarted = true;
                             var __animate = helpers.slide_to_page.call(workspace, nowPage, 0);
                             handler.animate(__animate.after, 300, ((opts.bounce && $.easing[opts.easing]!==undefined) ? opts.easing : "swing"), function() {
                                 __mouseStarted = false;
+								workspace.trigger({
+									type:"slideComplete",
+									nowPage:nowPage
+								});
                                 helpers.slide_callback.call(this);
                             });
                         } else {
                             nowPage = 1;
                         }
                         workspace.data("workData", $.extend({}, workData, { "nowPage": nowPage }));
-
                         return true;
                     };
 
                     var __mouseDown = function(event) {
+						if(autoPlayTimer){
+							clearInterval(autoPlayTimer);
+						}
                         if (__mouseStarted) return false;
-
                         event.preventDefault();
-
                         __mouseStarted = true;
-
                         var __touches = event.originalEvent.touches || event.originalEvent.targetTouches || event.originalEvent.changedTouches,
                             __startEvent =  __touches === undefined ? event : __touches[0];
 
@@ -263,7 +278,6 @@
 
                     var __click = function(event) {
                         event.preventDefault();
-
                         return __preventClickEvent;
                     };
 
@@ -358,12 +372,18 @@
                             if (opts.bounce === true) handler.animate(__animate.before, during);
                             handler.animate(__animate.after, during, ($.easing[opts.easing]!==undefined ? opts.easing : "swing"), function() {
                                 __mouseStarted = false;
-                                helpers.slide_callback.call(this);
+								workspace.trigger({
+									type:"slideComplete",
+									nowPage:nowPage
+								});
+                               helpers.slide_callback.call(this);
                             });
                         } else {
-                            handler.css({ 'top': dragAndDrop.origY, 'left': dragAndDrop.origX });
+                            var thislink = $(event.target).parent("a").attr("href");
+							handler.css({ 'top': dragAndDrop.origY, 'left': dragAndDrop.origX });
                             handler.trigger("click.jqiphoneslide");
                             __mouseStarted = false;
+							gotoUrl(thislink);
                         }
 
                         if (opts.slideHandler === null || typeof opts.slideHandler !== "string") {
@@ -392,9 +412,91 @@
 
                     $(opts.nextPageHandler).bind("click.jqiphoneslide", __slideNextPage, false);
                     $(opts.prevPageHandler).bind("click.jqiphoneslide", __slidePrevPage, false);
-
-                    helpers.init_pages.call(this);
-
+					
+					helpers.init_pages.call(this);
+					
+					function gotoUrl(url){
+						if(url){
+							window.location.href=url;
+						}
+					};
+					// autoPlay function
+					if (opts.autoPlay){
+						if(autoPlayTimer){
+							clearInterval(autoPlayTimer);
+						}
+						autoPlayTimer = setInterval(function(){
+							var workData = workspace.data("workData"),
+								nowPage = parseInt(workData.nowPage), 
+								totalPages = parseInt(workData.totalPages);
+							if (nowPage === totalPages){
+								workData.nowPage = 0;
+							}
+							__slideNextPage();
+						},opts.autoPlayTime);
+					}
+					
+					function createPager(){
+						var workData = workspace.data("workData"),
+							nowPage = parseInt(workData.nowPage), 
+							totalPages = parseInt(workData.totalPages),
+							pagerHtml = '<ul class="'+ opts.pager.cssName +'"></ul>',
+							pagerlinks = "",
+							pagerIndicator = "";
+							
+						if (opts.pager.pagerType === "dot"){
+							pagerIndicator = "&#8226";
+						}
+						switch(opts.pager.pagerType){
+						case "number":
+							pagerIndicator = 0;
+							break;
+						case "dot":
+							pagerIndicator = "&#8226";
+							break;
+						default:
+							pagerIndicator = "";
+						}
+						for (var i=0; i < totalPages; i++){
+							var currentPager = pagerIndicator;
+							if (opts.pager.pagerType === "number"){
+								currentPager = i+1;
+							}
+							pagerlinks += '<li><span>'+ currentPager +'</span></li>';
+						}
+						pagerHtml = $(pagerHtml).append(pagerlinks);
+						$("li", pagerHtml).bind("click.pagerLink", function(){
+							var thisIndex = ($(this).index())+1;
+							if(autoPlayTimer){
+								clearInterval(autoPlayTimer);
+							}
+							$("#gallery").iphoneSlide('jqipslide2page', thisIndex, opts.pager.slideToAnimated);
+							updatePagerNav();
+						});
+						pagerHtml.insertAfter(workspace);
+						workspace.data("isPagerSet", true); // set "isPagerSet" into workspace data to prevent recreate when window resize
+						updatePagerNav();
+					};
+					function updatePagerNav(){
+						if (workspace.data("isPagerSet")){
+							var currentPageIndex = (workspace.data("workData").nowPage)-1,
+								pagerOnCssName = "on",
+								$pager = $("." + opts.pager.cssName);
+							$("li", $pager).removeClass(pagerOnCssName).eq(currentPageIndex).addClass(pagerOnCssName);
+						}
+					}
+					// pager function
+					if (opts.pager){
+						if (!workspace.data("isPagerSet")){
+							createPager();
+						}
+					}
+					// clear autoplay on window resize
+					$(window).resize(function() {
+						if(autoPlayTimer && opts.cancelAutoPlayOnResize){
+							clearInterval(autoPlayTimer);
+						}
+					});
                     return this;
                 });
             }
@@ -422,10 +524,10 @@
                 var totalPages, opts = helpers.options, workspace = $(this),  
                     handler = $(opts.handler, workspace),
                     pagesHandler = (!opts.pageshowfilter) ? handler.children(opts.pageHandler) : handler.children(opts.pageHandler).filter(':visible'),
-                    matrixRow = matrixColumn = pagesOuterWidth = pagesOuterHeight = maxWidthPage = maxHeightPage = 0;
+                    matrixRow = matrixColumn = pagesOuterWidth = pagesOuterHeight = maxWidthPage = maxHeightPage = 0,
+					defaultNowPage = 1;
 
                 totalPages = pagesHandler.length;
-
                 maxWidthPage = workspace.width();
                 maxHeightPage = workspace.height();
 
@@ -492,7 +594,10 @@
                 }
 
                 pagesHandler.css({ 'display' : 'block' });
-
+				// update workData nowPage after window resize to use current workData's now page
+				if (workspace.data("workData")){
+					defaultNowPage = workspace.data("workData").nowPage;
+				}
                 workspace.width(maxWidthPage).height(maxHeightPage)
                     .data("workData", $.extend({}, 
                      {
@@ -501,12 +606,11 @@
                         'matrixColumn': matrixColumn,
                         'pagesOuterWidth': pagesOuterWidth,
                         'pagesOuterHeight': pagesOuterHeight,
-                        'nowPage': 1,
+                        'nowPage': defaultNowPage,
                         'initIphoneSlide': true
                      })
                 ).data("options", opts);
                 handler.attr("data-target", "handler");
-
                 helpers.callback.call(this);
             },
             

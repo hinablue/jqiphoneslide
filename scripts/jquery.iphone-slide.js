@@ -635,7 +635,13 @@
                 for (var i=totalPages; i>0; i--) {
                     pagerLinks += '<li><span>'+(typeof pagerIndicator === "number" ? (totalPages-i+1) : pagerIndicator)+'</span></li>';
                 }
-                pagerHtml = $("<ul/>").addClass(opts.pager.className).html(pagerLinks);
+                if(opts.pager.selectorName.charAt(0) === ".") {
+                    pagerHtml = $("<ul/>").addClass(opts.pager.selectorName.substr(1, opts.pager.selectorName.length-1)).html(pagerLinks);
+                } else if(opts.pager.selectorName.charAt(0) === "#") {
+                    pagerHtml = $("<ul/>").attr("id",opts.pager.selectorName.substr(1, opts.pager.selectorName.length-1)).html(pagerLinks);
+                } else {
+                    pagerHtml = $("<ul/>").html(pagerLinks);
+                }
                 workspace.data("isPagerSet", true).parent().append(pagerHtml);
 
                 $("li", pagerHtml).bind("click.pagerLink", function(event) {

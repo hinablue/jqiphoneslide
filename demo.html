@@ -4,7 +4,7 @@
 <meta http-equiv="content-Type" content="text/html; charset=utf-8" /> 
 <meta http-equiv="imagetoolbar" content="no" /> 
 <meta name="robots" content="noodp" /> 
-<title>jQuery Simple iPhone Slide v0.5</title> 
+<title>jQuery Simple iPhone Slide v0.7</title> 
 <link rel="stylesheet" media="screen" type="text/css" href="./styles/base.css" />
 <link rel="stylesheet" media="screen" type="text/css" href="./styles/main.css" />
 
@@ -53,6 +53,15 @@
     easing: "swing",
     // Turn on/off default animate effect "bounce".
     bounce: true,
+	autoPlay: auto,
+	cancelAutoPlayOnResize: true,
+	pager: {
+		pagerType: "dot",
+        selectorName: ".banner_pager",
+        childrenOnClass: "on",
+		slideToAnimated: true
+	},
+	autoPlayTime: 3000,
 	// When slide page completed, fire this.
 	onShiftComplete : function(elem, page) {
 		// this is parent of the handler.
@@ -66,7 +75,8 @@
 	<div>
 	<pre class="brush: js">$('#album').iphoneSlide({
 	handler: "#paging",
-	pageHandler: ".page"
+	pageHandler: ".page",
+    autoPlay: true
 });</pre>
 	</div>
 	
@@ -358,6 +368,7 @@ $(document).ready(function() {
 	$('#album, #album5').iphoneSlide({
 		handler: ".paging",
 		pageHandler: ".page",
+        autoPlay: true,
         onShiftComplete: function(elem, page) {
         }
 	});

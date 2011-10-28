@@ -470,7 +470,7 @@
 							if(autoPlayTimer){
 								clearInterval(autoPlayTimer);
 							}
-							$("#gallery").iphoneSlide('jqipslide2page', thisIndex, opts.pager.slideToAnimated);
+							workspace.iphoneSlide('jqipslide2page', thisIndex, opts.pager.slideToAnimated);
 							updatePagerNav();
 						});
 						pagerHtml.insertAfter(workspace);

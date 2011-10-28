@@ -65,6 +65,14 @@ Add new setting "bounce" that you can turn on/off the default animate bounce eff
         easing: "swing",
         // Turn on/off default animate effect "bounce".
         bounce: true,
+        autoPlay: true,
+        cancelAutoPlayOnResize: true,
+        pager: {
+            pagerType: "dot",
+                       cssName: "banner_pager",
+                       slideToAnimated: true
+        },
+        autoPlayTime: 3000,
         // When slide page completed, fire this.
         onShiftComplete : function(elem, page) {
             // this is parent of the handler.

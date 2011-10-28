@@ -29,8 +29,9 @@
             easing: "swing",
             bounce: true,
             pageshowfilter : false,
-			autoPlay: true,
+			autoPlay: false,
 			cancelAutoPlayOnResize: true,
+            autoCreatePager: false,
 			pager: {
 				pagerType: "dot",
                 selectorName: ".banner_pager",
@@ -152,7 +153,7 @@
                     workspace.bind("slideComplete.jqiphoneslide", function(event) {
                         event.preventDefault();
 
-					    helpers.update_pager_nav.call(this);
+					    updatePagerNav();
 					});
 
                     var __slideNextPage = function(event) {
@@ -174,7 +175,7 @@
                             nowPage = totalPages;	
                         }               
                         workspace.data("workData", $.extend({}, workData, { "nowPage": nowPage }));
-						helpers.update_pager_nav.call(workspace);
+						updatePagerNav();
                         return true;
                     };
 					
@@ -199,6 +200,53 @@
                         }
                         workspace.data("workData", $.extend({}, workData, { "nowPage": nowPage }));
                         return true;
+                    };
+                    var updatePagerNav = function() {
+                        var workData = workspace.data("workData"), 
+                            opts = helpers.options || workspace.data("options"), handler = $(opts.handler, workspace);
+
+                        if (workspace.data("isPagerSet") === true) {
+                            var currentPageIndex = parseInt(workData.nowPage)-1,
+                                pager = $(opts.pager.selectorName);
+                            $("li", pager).removeClass(opts.pager.childrenOnClass).eq(currentPageIndex).addClass(opts.pager.childrenOnClass);
+                        }
+                    };
+
+                    var createPager = function() {
+                        var workData = workspace.data("workData"), totalPages = parseInt(workData.totalPages), 
+                            pagerHtml, pagerLinks = "", pagerIndicator;
+
+                        switch(opts.pager.pagerType) {
+                            case "number":
+                                pagerIndicator = 0;
+                            break;
+                            case "dot":
+                                pagerIndicator = "&#8226";
+                            break;
+                            default:
+                                pagerIndicator = "";
+                        }
+                        for (var i=totalPages; i>0; i--) {
+                            pagerLinks += '<li><span>'+(typeof pagerIndicator === "number" ? (totalPages-i+1) : pagerIndicator)+'</span></li>';
+                        }
+                        if(opts.pager.selectorName.charAt(0) === ".") {
+                            pagerHtml = $("<ul/>").addClass(opts.pager.selectorName.substr(1, opts.pager.selectorName.length-1)).html(pagerLinks);
+                        } else if(opts.pager.selectorName.charAt(0) === "#") {
+                            pagerHtml = $("<ul/>").attr("id",opts.pager.selectorName.substr(1, opts.pager.selectorName.length-1)).html(pagerLinks);
+                        } else {
+                            pagerHtml = $("<ul/>").html(pagerLinks);
+                        }
+                        workspace.data("isPagerSet", true).parent().append(pagerHtml);
+
+                        $("li", pagerHtml).bind("click.pagerLink", function(event) {
+                            if (workspace.data("workData").autoPlayTimer) {
+                                clearInterval(workspace.data("workData").autoPlayTimer);
+                            }
+                            workspace.iphoneSlide('jqipslide2page', $(this).index()+1, opts.pager.slideToAnimated);
+                            updatePagerNav();
+                        }, false);
+
+                        updatePagerNav();
                     };
 
                     var __mouseDown = function(event) {
@@ -433,8 +481,8 @@
                         }, opts.autoPlayTime);
                     }
 					// pager function
-					if (opts.pager && !workspace.data("isPagerSet")) {
-						helpers.create_pager.call(this);
+					if (opts.pager && opts.autoCreatePager && !workspace.data("isPagerSet")) {
+						createPager();
 					}
 					// clear autoplay on window resize
 					$(window).resize(function() {
@@ -615,54 +663,6 @@
                         };
                 }
                 return __animate;
-            },
-            create_pager: function() {
-                var workspace = ($(this).attr("data-target")==="handler") ? $(this).parent() : $(this),
-                    opts = helpers.options || workspace.data("options"), handler = $(opts.handler, workspace),
-                    workData = workspace.data("workData"), nowPage = parseInt(workData.nowPage),
-                    totalPages = parseInt(workData.totalPages), pagerHtml, pagerLinks = "", pagerIndicator;
-
-                switch(opts.pager.pagerType) {
-                    case "number":
-                        pagerIndicator = 0;
-                    break;
-                    case "dot":
-                        pagerIndicator = "&#8226";
-                    break;
-                    default:
-                        pagerIndicator = "";
-                }
-                for (var i=totalPages; i>0; i--) {
-                    pagerLinks += '<li><span>'+(typeof pagerIndicator === "number" ? (totalPages-i+1) : pagerIndicator)+'</span></li>';
-                }
-                if(opts.pager.selectorName.charAt(0) === ".") {
-                    pagerHtml = $("<ul/>").addClass(opts.pager.selectorName.substr(1, opts.pager.selectorName.length-1)).html(pagerLinks);
-                } else if(opts.pager.selectorName.charAt(0) === "#") {
-                    pagerHtml = $("<ul/>").attr("id",opts.pager.selectorName.substr(1, opts.pager.selectorName.length-1)).html(pagerLinks);
-                } else {
-                    pagerHtml = $("<ul/>").html(pagerLinks);
-                }
-                workspace.data("isPagerSet", true).parent().append(pagerHtml);
-
-                $("li", pagerHtml).bind("click.pagerLink", function(event) {
-                    if (workspace.data("workData").autoPlayTimer) {
-                        clearInterval(workspace.data("workData").autoPlayTimer);
-                    }
-                    workspace.iphoneSlide('jqipslide2page', $(this).index()+1, opts.pager.slideToAnimated);
-                    helpers.update_pager_nav.call(workspace);
-                });
-                helpers.update_pager_nav.call(workspace);
-            },
-            update_pager_nav: function() {
-                var workspace = $(this),
-                    opts = helpers.options || workspace.data("options"), handler = $(opts.handler, workspace),
-                    workData = workspace.data("workData");
-
-                if (workspace.data("isPagerSet") === true) {
-                    var currentPageIndex = parseInt(workData.nowPage)-1,
-                        pager = $(opts.pager.selectorName);
-                    $("li", pager).removeClass(opts.pager.childrenOnClass).eq(currentPageIndex).addClass(opts.pager.childrenOnClass);
-                }
             },
             goto_url: function(url) {
                 if (url) {

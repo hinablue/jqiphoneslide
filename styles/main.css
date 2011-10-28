@@ -72,5 +72,19 @@ button {
 	cursor: pointer;
 }
 
+.banner_pager {
+    list-style: none;
+}
+.banner_pager > li {
+    display: block;
+    float: left;
+    width: 1em;
+    height: 1em;
+    cursor: pointer;
+}
+.banner_pager > li.on {
+    color: red;
+}
+
 .paging div.p1, .paging div.p3, .paging div.p5, .paging div.p7, .paging div.p9
 { width: 500px; height: 500px; }

@@ -6,7 +6,8 @@ Update to v0.7, merge new functions from Adam Chow.
 *   make banner link clickable
 
 Known Issue:
-When you bind the multiple selectors, the auto play function maybe failed in the pager switcher.
+
+--When you bind the multiple selectors, the auto play function maybe failed in the pager switcher.--
 
 # UPDATE, v0.6 #
 

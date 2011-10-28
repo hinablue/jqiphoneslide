@@ -202,13 +202,19 @@
                         return true;
                     };
                     var updatePagerNav = function() {
+                        console.log(workspace);
                         var workData = workspace.data("workData"), 
                             opts = helpers.options || workspace.data("options"), handler = $(opts.handler, workspace);
 
                         if (workspace.data("isPagerSet") === true) {
                             var currentPageIndex = parseInt(workData.nowPage)-1,
                                 pager = $(opts.pager.selectorName);
-                            $("li", pager).removeClass(opts.pager.childrenOnClass).eq(currentPageIndex).addClass(opts.pager.childrenOnClass);
+                            pager.each(function() {
+                                $("li", $(this))
+                                .removeClass(opts.pager.childrenOnClass)
+                                .eq(currentPageIndex)
+                                .addClass(opts.pager.childrenOnClass);
+                            });
                         }
                     };
 

@@ -333,6 +333,7 @@
 
                     var __click = function(event) {
                         event.preventDefault();
+                        event.stopPropagation();
 
                         var currentTag = event.currentTarget.nodeName.toLowerCase();
 
@@ -349,6 +350,8 @@
                             default:
                                 return __preventClickEvent;
                         }
+
+                        return true;
                     };
 
                     var __mouseUp = function(event) {
@@ -448,6 +451,8 @@
 								});
                                helpers.slide_callback.call(this);
                             });
+                        } else {
+                            __mouseStarted = false;
                         }
 
                         if (opts.slideHandler === null || typeof opts.slideHandler !== "string") {

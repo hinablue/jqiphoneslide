@@ -4,6 +4,22 @@ FIXED: Use `<a>`, `<input>` and `<button>` Tags in the slide working fine on the
 
 If you use the `<a>` tag, it will open new window to show the website/webpage. If you use the `<input>` or `<button>`, you must bind the `click` event on your element, it will trigger the `click` event when user click the button on the slide.
 
+---------------------------------------
+
+# Buy me a beer :-P #
+
+<form name="_xclick" action="https://www.paypal.com/cgi-bin/webscr" method="post">
+<input type="hidden" name="cmd" value="_xclick" />
+<input type="hidden" name="business" value="hinablue@gmail.com" />
+<input type="hidden" name="item_name" value="jQ iPhone Slide" />
+<input type="hidden" name="currency_code" value="USD" />
+<input type="hidden" name="amount" value="" />
+<input type="image" src="http://www.paypal.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="Make payments with PayPal - it's fast, free and secure!" />
+</form>
+
+
+---------------------------------------
+
 # UPDATE, v0.7 #
 
 Update to v0.7, merge new functions from Adam Chow.

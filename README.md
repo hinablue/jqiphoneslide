@@ -1,3 +1,9 @@
+# UPDATE, v0.75 #
+
+FIXED: Use `<a>`, `<input>` and `<button>` Tags in the slide working fine on the mobile device, tested in iPhone 4/4S with Safari.
+
+If you use the `<a>` tag, it will open new window to show the website/webpage. If you use the `<input>` or `<button>`, you must bind the `click` event on your element, it will trigger the `click` event when user click the button on the slide.
+
 # UPDATE, v0.7 #
 
 Update to v0.7, merge new functions from Adam Chow.

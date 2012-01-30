@@ -1,11 +1,11 @@
 /**
  * iphoneSlide - jQuery plugin
- * @version: 0.7 (2011/10/27)
+ * @version: 0.75 (2012/01/29)
  * @requires jQuery v1.4+
  * @author Hina, Cain Chen. hinablue [at] gmail [dot] com
  * @modified by: Adam Chow adamchow2326@yahoo.com.au
  * Examples and documentation at: http://jquery.hinablue.me/jqiphoneslide
- * 
+ *
  * Dual licensed under the MIT and GPL licenses:
  * http://www.opensource.org/licenses/mit-license.php
  * http://www.gnu.org/licenses/gpl.html
@@ -46,13 +46,13 @@
 
         var methods = {
 			pluginWorkspace: "test",
-            jqipslide2page: function(page, effect) {				
+            jqipslide2page: function(page, effect) {
                 var workspace = $(this), workData = $(this).data("workData"), opts = $(this).data("options");
                 if (workData.initIphoneSlide) {
                     var page = page, __animate = {}, effect = (typeof effect === "boolean") ? effect : true,
-                        handler = $(opts.handler, workspace), 
-                        pageElem = (opts.pageshowfilter ? handler.children(opts.pageHandler).filter('visible') : handler.children(opts.pageHandler)), 
-                        shift = { "X": 0, "Y": 0 }, 
+                        handler = $(opts.handler, workspace),
+                        pageElem = (opts.pageshowfilter ? handler.children(opts.pageHandler).filter('visible') : handler.children(opts.pageHandler)),
+                        shift = { "X": 0, "Y": 0 },
                         outerWidthBoundary = workspace.width(),
                         outerHeightBoundary = workspace.height(),
                         nowPageElem = pageElem.eq(page-1);
@@ -78,9 +78,9 @@
             },
 
             jqipblank2page: function(content, jump2page, callback) {
-                var workspace = $(this), workData = $(this).data("workData"), opts = $(this).data("options"), 
+                var workspace = $(this), workData = $(this).data("workData"), opts = $(this).data("options"),
                     content = $.isArray(content) ? content : (typeof content === "string" ? [content] : []),
-                    jump2page = (typeof jump2page === "boolean") ? jump2page : false, 
+                    jump2page = (typeof jump2page === "boolean") ? jump2page : false,
                     callback = (typeof jump2page === "function") ? jump2page : (typeof callback === "function") ? callback : function() { return false; };
                 if (workData.initIphoneSlide && content.length > 0) {
                     var totalAddPage = content.length,
@@ -104,14 +104,14 @@
             init: function(options, callback) {
                 var opts = $.extend({}, defaults, options),
                     callback = (typeof callback === "function") ? callback : function() { return this; };
-				
+
                 helpers.options = opts;
                 helpers.callback = callback;
 
                 return $(this).each(function() {
-					var workspace = $(this), workData = workspace.data("workData"), 
-                        handler = $(opts.handler, workspace), 
-                        dragAndDrop = $.extend({}, { origX:0, origY:0, X:0, Y:0 }), 
+					var workspace = $(this), workData = workspace.data("workData"),
+                        handler = $(opts.handler, workspace),
+                        dragAndDrop = $.extend({}, { origX:0, origY:0, X:0, Y:0 }),
                         startEventData, moveEventData,
                         totalPages = matrixRow = matrixColumn = 0,
                         __preventClickEvent = __mouseStarted = __touchesDevice = false,
@@ -148,7 +148,7 @@
 
                     $(opts.prevPageHandler).unbind("click.jqiphoneslide", __slidePrevPage, false);
                     $(opts.nextPageHandler).unbind("click.jqiphoneslide", __slideNextPage, false);
-					
+
 					// bind custome "slideComplete event"
                     workspace.bind("slideComplete.jqiphoneslide", function(event) {
                         event.preventDefault();
@@ -158,7 +158,7 @@
 
                     var __slideNextPage = function(event) {
                         var workData = workspace.data("workData"),
-                            nowPage = parseInt(workData.nowPage), 
+                            nowPage = parseInt(workData.nowPage),
                             totalPages = parseInt(workData.totalPages);
                         nowPage++;
                         if (nowPage <= totalPages) {
@@ -172,16 +172,16 @@
 								helpers.slide_callback.call(this);
                             });
                         } else {
-                            nowPage = totalPages;	
-                        }               
+                            nowPage = totalPages;
+                        }
                         workspace.data("workData", $.extend({}, workData, { "nowPage": nowPage }));
 						updatePagerNav();
                         return true;
                     };
-					
+
                     var __slidePrevPage = function(event) {
                         var workData = workspace.data("workData"),
-                            nowPage = parseInt(workData.nowPage), 
+                            nowPage = parseInt(workData.nowPage),
                             totalPages = parseInt(workData.totalPages);
                         nowPage--;
                         if(nowPage>0) {
@@ -202,8 +202,7 @@
                         return true;
                     };
                     var updatePagerNav = function() {
-                        console.log(workspace);
-                        var workData = workspace.data("workData"), 
+                        var workData = workspace.data("workData"),
                             opts = helpers.options || workspace.data("options"), handler = $(opts.handler, workspace);
 
                         if (workspace.data("isPagerSet") === true) {
@@ -219,7 +218,7 @@
                     };
 
                     var createPager = function() {
-                        var workData = workspace.data("workData"), totalPages = parseInt(workData.totalPages), 
+                        var workData = workspace.data("workData"), totalPages = parseInt(workData.totalPages),
                             pagerHtml, pagerLinks = "", pagerIndicator;
 
                         switch(opts.pager.pagerType) {
@@ -292,7 +291,7 @@
 
                         return !__mouseStarted;
                     };
-                    
+
                     var __mouseMove = function(event) {
                         if ($.browser.msie && !event.button) return __mouseUp(event);
 
@@ -334,7 +333,22 @@
 
                     var __click = function(event) {
                         event.preventDefault();
-                        return __preventClickEvent;
+
+                        var currentTag = event.currentTarget.nodeName.toLowerCase();
+
+                        switch(currentTag) {
+                            case 'a':
+                                if (/http(s?):\/\/.*/gi.test(event.currentTarget)) {
+                                    helpers.goto_url(event.currentTarget);
+                                }
+                            break;
+                            case 'button':
+                            case 'input':
+                                $(event.currentTarget).trigger('click');
+                            break;
+                            default:
+                                return __preventClickEvent;
+                        }
                     };
 
                     var __mouseUp = function(event) {
@@ -347,10 +361,10 @@
                         }
 
                         var workData = $(this).parent().data("workData"),
-                            totalPages = parseInt(workData.totalPages), 
-                            nowPage = parseInt(workData.nowPage), 
-                            matrixRow = parseInt(workData.matrixRow), 
-                            matrixColumn = parseInt(workData.matrixColumn), 
+                            totalPages = parseInt(workData.totalPages),
+                            nowPage = parseInt(workData.nowPage),
+                            matrixRow = parseInt(workData.matrixRow),
+                            matrixColumn = parseInt(workData.matrixColumn),
                             __eventTouches,
                             __touches = event.originalEvent.touches || event.originalEvent.targetTouches || event.originalEvent.changedTouches,
                             __mouseDownEvent = startEventData;
@@ -387,7 +401,7 @@
                                     "Y": 0,
                                     "shift": Math.max(thisMove.X.shift , thisMove.Y.shift),
                                     "speed": Math.max(thisMove.X.speed , thisMove.Y.speed)
-                                }, 
+                                },
                                 easing = {
                                     "X": Math.min(__eventTouches.pageX-__mouseDownEvent.pageX , thisPageSize.width),
                                     "Y": Math.min(__eventTouches.pageY-__mouseDownEvent.pageY , thisPageSize.height)
@@ -434,12 +448,6 @@
 								});
                                helpers.slide_callback.call(this);
                             });
-                        } else {
-                            var thislink = $(event.target).parent("a").attr("href");
-							handler.css({ 'top': dragAndDrop.origY, 'left': dragAndDrop.origX });
-                            handler.trigger("click.jqiphoneslide");
-                            __mouseStarted = false;
-							helpers.goto_url(thislink);
                         }
 
                         if (opts.slideHandler === null || typeof opts.slideHandler !== "string") {
@@ -454,21 +462,20 @@
                     };
 
                     if(opts.slideHandler === null || typeof opts.slideHandler !== "string") {
-                        handler.delegate('a, button, input[type=button], input[type=reset], input[type=submit]', 'touchstart.jqiphoneslide click.jqiphoneslide', __click);
+                        $('a, button, input[type=button], input[type=reset], input[type=submit]', handler)
+                        .bind('mousedown.jqiphoneslide touchstart.jqiphoneslide', __click, false);
 
                         workspace.delegate(opts.handler, "mousedown.jqiphoneslide touchstart.jqiphoneslide MozTouchDown.jqiphoneslide", __mouseDown);
-                        //.bind("click.jqiphoneslide", __click, false);
                     } else {
-                        handler.filter(opts.slideHandler)
-                        .delegate('a, button, input[type=button], input[type=reset], input[type=submit]', 'touchstart.jqiphoneslide click.jqiphoneslide', __click);
+                        $('a, button, input[type=button], input[type=reset], input[type=submit]', handler.filter(opts.slideHandler))
+                        .bind('mousedown.jqiphoneslide touchstart.jqiphoneslide', __click, false);
 
                         workspace.delegate(opts.slideHandler, "mousedown.jqiphoneslide touchstart.jqiphoneslide MozTouchDown.jqiphoneslide", __mouseDown);
-                        //.bind("click.jqiphoneslide", __click, false);
                     }
 
                     $(opts.nextPageHandler).bind("click.jqiphoneslide", __slideNextPage, false);
                     $(opts.prevPageHandler).bind("click.jqiphoneslide", __slidePrevPage, false);
-					
+
 					helpers.init_pages.call(this);
 
                     // auto player
@@ -478,7 +485,7 @@
                         }
                         workspace.data("workData").autoPlayTimer = setInterval(function() {
                             var workData = workspace.data("workData"),
-                            nowPage = parseInt(workData.nowPage), 
+                            nowPage = parseInt(workData.nowPage),
                             totalPages = parseInt(workData.totalPages);
                             if (nowPage === totalPages) {
                                 workData.nowPage = 0;
@@ -521,7 +528,7 @@
             },
 
             init_pages: function() {
-                var totalPages, opts = helpers.options, workspace = $(this),  
+                var totalPages, opts = helpers.options, workspace = $(this),
                     handler = $(opts.handler, workspace),
                     pagesHandler = (!opts.pageshowfilter) ? handler.children(opts.pageHandler) : handler.children(opts.pageHandler).filter(':visible'),
                     matrixRow = matrixColumn = pagesOuterWidth = pagesOuterHeight = maxWidthPage = maxHeightPage = 0,
@@ -536,7 +543,7 @@
                         matrixRow = Math.ceil(Math.sqrt(totalPages));
                         matrixColumn = Math.ceil(totalPages / matrixRow);
 
-                        pagesHandler.each(function(i, elem) { 
+                        pagesHandler.each(function(i, elem) {
                             maxWidthPage = ($(elem).outerWidth(true) >= maxWidthPage) ? $(elem).outerWidth(true) : maxWidthPage;
                             maxHeightPage = ($(elem).outerHeight(true) >= maxHeightPage) ? $(elem).outerHeight(true) : maxHeightPage;
                         });
@@ -564,7 +571,7 @@
                         }
                     break;
                     case "vertical":
-                        pagesHandler.each(function(i, elem) { 
+                        pagesHandler.each(function(i, elem) {
                             pagesOuterHeight += $(elem).outerHeight(true);
                             maxWidthPage = ($(elem).outerWidth(true) >= maxWidthPage) ? $(elem).outerWidth(true) : maxWidthPage;
                             maxHeightPage = ($(elem).outerHeight(true) >= maxHeightPage) ? $(elem).outerHeight(true) : maxHeightPage;
@@ -579,7 +586,7 @@
                     break;
                     case "horizontal":
                     default:
-                        pagesHandler.each(function(i, elem) { 
+                        pagesHandler.each(function(i, elem) {
                             pagesOuterWidth += $(elem).outerWidth(true);
                             maxWidthPage = ($(elem).outerWidth(true) >= maxWidthPage) ? $(elem).outerWidth(true) : maxWidthPage;
                             maxHeightPage = ($(elem).outerHeight(true) >= maxHeightPage) ? $(elem).outerHeight(true) : maxHeightPage;
@@ -599,7 +606,7 @@
 					defaultNowPage = workspace.data("workData").nowPage;
 				}
                 workspace.width(maxWidthPage).height(maxHeightPage)
-                    .data("workData", $.extend({}, 
+                    .data("workData", $.extend({},
                      {
                         'totalPages': totalPages,
                         'matrixRow': matrixRow,
@@ -614,7 +621,7 @@
                 handler.attr("data-target", "handler");
                 helpers.callback.call(this);
             },
-            
+
             slide_callback: function() {
                 var workspace = ($(this).attr("data-target")==="handler") ? $(this).parent() : $(this),
                     workData = workspace.data("workData"), nowPage = workData.nowPage,
@@ -629,12 +636,12 @@
             },
 
             slide_to_page: function(page, easing) {
-                var page = page,  
+                var page = page,
                     workspace = ($(this).attr("data-target")==="handler") ? $(this).parent() : $(this),
                     opts = helpers.options || workspace.data("options"), handler = $(opts.handler, workspace),
                     easing = easing || { "X":0, "Y": 0},
-                    pageElem = (opts.pageshowfilter ? handler.children(opts.pageHandler).filter('visible') : handler.children(opts.pageHandler)), 
-                    shift = { "X": 0, "Y": 0 }, 
+                    pageElem = (opts.pageshowfilter ? handler.children(opts.pageHandler).filter('visible') : handler.children(opts.pageHandler)),
+                    shift = { "X": 0, "Y": 0 },
                     __animate = { 'before': {}, 'after': {} },
                     outerWidthBoundary = workspace.width(),
                     outerHeightBoundary = workspace.height(),
@@ -671,9 +678,7 @@
                 return __animate;
             },
             goto_url: function(url) {
-                if (url) {
-                    window.location.href = url;
-                }
+                window.open(url);
             }
         };
 

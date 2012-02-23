@@ -1,3 +1,7 @@
+# UPDATE, v0.75.1 #
+
+Bug fixed.
+
 # UPDATE, v0.75 #
 
 FIXED: Use `<a>`, `<input>` and `<button>` Tags in the slide working fine on the mobile device, tested in iPhone 4/4S with Safari.

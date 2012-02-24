@@ -283,7 +283,7 @@
                                 .delegate(opts.slideHandler, "touchend.jqiphoneslide touchcancel.jqiphoneslide MozTouchUp.jqiphoneslide", __mouseUp);
                             } else {
                                 workspace.delegate(opts.slideHandler, "mousemove.jqiphoneslide", __mouseMove)
-                                .delegate(pts.slideHandler, "mouseleave.jqiphoneslide mouseup.jqiphoneslide", __mouseUp);
+                                .delegate(opts.slideHandler, "mouseleave.jqiphoneslide mouseup.jqiphoneslide", __mouseUp);
                             }
                         }
 
@@ -356,12 +356,12 @@
                         event.preventDefault();
 
                         if (opts.slideHandler === null || typeof opts.slideHandler !== "string") {
-                            workspace.undelegate(opts.handler, "mousemove.jqiphoneslide touchmove.jqiphoneslide MozTouchMove.jqiphoneslide");
+                            workspace.undelegate(opts.handler, "mousemove.jqiphoneslide touchmove.jqiphoneslide MozTouchMove.jqiphoneslide", __mouseMove);
                         } else {
-                            workspace.undelegate(opts.slideHandler,"mousemove.jqiphoneslide touchmove.jqiphoneslide MozTouchMove.jqiphoneslide");
+                            workspace.undelegate(opts.slideHandler,"mousemove.jqiphoneslide touchmove.jqiphoneslide MozTouchMove.jqiphoneslide", __mouseMove);
                         }
 
-                        var workData = $(this).parent().data('workData'),
+                        var workData = workspace.data('workData'),
                             totalPages = parseInt(workData.totalPages),
                             nowPage = parseInt(workData.nowPage),
                             matrixRow = parseInt(workData.matrixRow),
@@ -620,14 +620,19 @@
                         'autoPlayTimer': null
                      })
                 ).data('options', opts);
-                handler.data('target', 'handler');
+
+                if (opts.slideHandler === null || typeof opts.slideHandler !== "string") {
+                    handler.data('target', 'handler');
+                } else {
+                    handler.data('target', workspace.attr('id'));
+                }
                 helpers.callback.call(this);
             },
 
             slide_callback: function() {
-                var workspace = ($(this).data('target')==="handler") ? $(this).parent() : $(this),
+                var opts = helpers.options, 
+                    workspace = ($(this).data('target')==="handler") ? $(this).parent() : $('#'+$(opts.handler).data('target')),
                     workData = workspace.data('workData'), nowPage = workData.nowPage,
-                    opts = helpers.options || workspace.data('options'),
                     handler = $(opts.handler, workspace).children(opts.pageHandler);
 
                 if(!opts.pageshowfilter) {
@@ -638,9 +643,9 @@
             },
 
             slide_to_page: function(page, easing) {
-                var page = page,
-                    workspace = ($(this).data('target')==="handler") ? $(this).parent() : $(this),
-                    opts = helpers.options || workspace.data('options'), handler = $(opts.handler, workspace),
+                var page = page, opts = helpers.options,
+                    workspace = ($(this).data('target')==="handler") ? $(this).parent() : $('#'+$(opts.handler).data('target')),
+                    handler = $(opts.handler, workspace),
                     easing = easing || { X:0, Y: 0},
                     pageElem = (!opts.pageshowfilter ? handler.children(opts.pageHandler) : handler.children(opts.pageHandler).filter(':visible')),
                     shift = { X: 0, Y: 0 },

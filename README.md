@@ -1,3 +1,11 @@
+# New Project #
+
+Rewrite with CoffeeScript and fixed some issue about mobile devices.
+
+[https://github.com/hinablue/iphoneslide](https://github.com/hinablue/iphoneslide)
+
+---------------------------------------
+
 # UPDATE, v0.75.1 #
 
 Bug fixed.
